@@ -12,7 +12,8 @@
 
 # Custom helpers
 
-export log = -> console.log.apply console, &; &0
+export log  = -> console.log.apply  console, &; &0
+export info = -> console.info.apply console, &; &0
 
 export obj-map = (λ, o) --> [ λ k, v for k, v of o ]
 
@@ -20,6 +21,9 @@ export flip  = (λ) -> (a, b) --> λ b, a
 
 export delay = flip set-timeout
 
+export round = Math.round
+export max   = Math.max
+export min   = Math.min
 
 # Export
 

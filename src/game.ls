@@ -25,7 +25,6 @@ player  = null
 last-frame-time = 0
 
 
-
 # Event loop
 #
 # Obviously JS has an event loop but I want to emulate RCS style where possible
@@ -42,10 +41,27 @@ event-loop = ->
     | SDL.KEYUP   => input.key-up-event   event
     | otherwise   => throw new Error message: "Unknown event type: " + event
 
+
+  #
   # Interrogate key state
+  #
+
+  # Escape to quit
   if input.was-key-pressed SDL.KEY.ESCAPE
     running := no
 
+  # Arrow keys control the player
+  if (input.is-key-held SDL.KEY.LEFT) and (input.is-key-held SDL.KEY.RIGHT)
+    player.stop-moving!
+  else if input.is-key-held SDL.KEY.LEFT
+    player.start-moving-left!
+  else if input.is-key-held SDL.KEY.RIGHT
+    player.start-moving-right!
+  else
+    player.stop-moving!
+
+
+  # Updates and drawing
   update SDL.get-ticks! - last-frame-time
   draw!
 
@@ -62,9 +78,9 @@ update = (elapsed-time) ->
   player.update elapsed-time
 
 draw = ->
-  # Instead of graphics.flip at the end, we have graphics.clear at the start
   graphics.clear!
   player.draw graphics, 320, 240
+  # no graphics.flip required
 
 
 # Export
@@ -82,6 +98,6 @@ export start = ({ assets }) ->
   event-loop!
 
   # TESTING: Don't let the game loop run long
-  std.delay 3000, ->
+  std.delay 10000, ->
     running := no
 

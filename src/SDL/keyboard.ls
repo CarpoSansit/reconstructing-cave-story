@@ -13,17 +13,24 @@ queue = require \./event-queue
 [ KEYDOWN, KEYUP ] = std.enum
 
 export KEYCODES =
-  ESCAPE: 27
+  ESCAPE : 27
+  LEFT   : 37
+  UP     : 38
+  RIGHT  : 39
+  DOWN   : 40
 
 
 # Functions
 
 monitor-keys = ->
   document.add-event-listener \keydown, ({ which }) ->
+    std.info which
     queue.push-event { type: KEYDOWN, key: which }
+    event.prevent-default!
 
   document.add-event-listener \keyup, ({ which }) ->
     queue.push-event { type: KEYUP, key: which }
+    event.prevent-default!
 
 export init = ->
   std.log "SDL::Keyboard - Monitoring key input"
