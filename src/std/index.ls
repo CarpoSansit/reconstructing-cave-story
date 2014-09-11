@@ -10,23 +10,22 @@
 { id, map, filter, any } = require \prelude-ls
 
 
-# Other helpers
+# Custom helpers
 
-log = -> console.log.apply console, &; &0
+export log = -> console.log.apply console, &; &0
 
-obj-map = (λ, o) --> [ λ k, v for k, v of o ]
+export obj-map = (λ, o) --> [ λ k, v for k, v of o ]
 
+export flip  = (λ) -> (a, b) --> λ b, a
+
+export delay = flip set-timeout
 
 
 # Export
 
 export {
-  id
-  log
-  any
-  map
-  obj-map
-  filter
+  # Specified Prelude functions only
+  id, any, map, filter,
 
   # Enum helper - assign sequential integers using destructuring syntax
   enum: [ 0 to 20 ]

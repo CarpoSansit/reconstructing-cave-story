@@ -6,18 +6,21 @@
 require! \std
 require! \SDL
 
-Sprite = require \./sprite
+Sprite         = require \./sprite
+AnimatedSprite = require \./animated-sprite
 
 
 # Reference constants
 
-kFps = 60
+export kFps = 60
+export kTileSize = 32
 
 
 # Internal state
 
 running = yes
 assets  = {}
+last-frame-time = 0
 
 graphics = null
 sprite   = null
@@ -44,19 +47,20 @@ event-loop = ->
     | otherwise =>
       throw new Error message: "Unknown event type: " + event
 
-  update!
+  update SDL.get-ticks! - last-frame-time
   draw!
 
   # Queue next frame
   if running
-    elapsed-time = SDL.get-ticks! - start-time
+    last-frame-time := SDL.get-ticks!
+    elapsed-time = last-frame-time - start-time
     SDL.delay 1000ms / kFps - elapsed-time, event-loop
   else
     std.log 'Game stopped.'
 
 
-update = ->
-  void
+update = (elapsed-time) ->
+  sprite.update elapsed-time
 
 draw = ->
 
@@ -72,7 +76,11 @@ export start = ({ assets }) ->
 
   graphics := require \./graphics
   assets   := assets
-  sprite   := new Sprite assets.MyChar, 0, 0, 32, 32
+  sprite   := new AnimatedSprite assets.MyChar, 0, 0, kTileSize, kTileSize, 15, 3
 
   event-loop!
+
+  # TESTING: Don't let the game loop run long
+  std.delay 3000, ->
+    running := no
 
