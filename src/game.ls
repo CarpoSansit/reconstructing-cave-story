@@ -6,26 +6,24 @@
 require! \std
 require! \SDL
 
-Input          = require \./input
-Sprite         = require \./sprite
-AnimatedSprite = require \./animated-sprite
+require! \./input
+require! \./graphics
+
+Player = require \./player
 
 
 # Reference constants
 
-export kFps = 60
+export kFps      = 60
 export kTileSize = 32
 
 
 # Internal state
 
 running = yes
-assets  = {}
+player  = null
 last-frame-time = 0
 
-input    = null
-graphics = null
-sprite   = null
 
 
 # Event loop
@@ -61,12 +59,12 @@ event-loop = ->
 
 
 update = (elapsed-time) ->
-  sprite.update elapsed-time
+  player.update elapsed-time
 
 draw = ->
   # Instead of graphics.flip at the end, we have graphics.clear at the start
   graphics.clear!
-  sprite.draw graphics, 320, 240
+  player.draw graphics, 320, 240
 
 
 # Export
@@ -74,11 +72,13 @@ draw = ->
 export start = ({ assets }) ->
   SDL.init(SDL.INIT_EVERYTHING);
 
-  graphics := require \./graphics
-  input    := new Input
-  assets   := assets
-  sprite   := new AnimatedSprite assets.MyChar, 0, 0, kTileSize, kTileSize, 15, 3
+  # Make asset library available
+  export assets := assets
 
+  # Create game world
+  player := new Player 320, 240
+
+  # Begin game loop
   event-loop!
 
   # TESTING: Don't let the game loop run long

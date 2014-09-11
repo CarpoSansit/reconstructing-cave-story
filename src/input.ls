@@ -6,7 +6,7 @@ require! \std
 
 # Input class
 
-module.exports = class Input
+class Input
   ->
     @held-keys     = {}
     @pressed-keys  = {}
@@ -27,4 +27,9 @@ module.exports = class Input
   was-key-pressed  : (key) -> @pressed-keys[key]
   was-key-released : (key) -> @released-keys[key]
   is-key-held      : (key) -> @held-keys[key]
+
+
+# Export as singleton
+
+module.exports = new Input
 
