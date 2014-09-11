@@ -6,6 +6,7 @@
 require! \std
 require! \SDL
 
+Input          = require \./input
 Sprite         = require \./sprite
 AnimatedSprite = require \./animated-sprite
 
@@ -22,6 +23,7 @@ running = yes
 assets  = {}
 last-frame-time = 0
 
+input    = null
 graphics = null
 sprite   = null
 
@@ -33,19 +35,18 @@ sprite   = null
 event-loop = ->
 
   start-time = SDL.get-ticks!
+  input.begin-new-frame!
 
-  # Handle input
+  # Consume input events
   while event = SDL.poll-event!
     switch event.type
-    | SDL.KEYDOWN =>
-      if event.key is SDL.KEY.ESCAPE
-        running := no
+    | SDL.KEYDOWN => input.key-down-event event
+    | SDL.KEYUP   => input.key-up-event   event
+    | otherwise   => throw new Error message: "Unknown event type: " + event
 
-    | SDL.KEYUP =>
-      void
-
-    | otherwise =>
-      throw new Error message: "Unknown event type: " + event
+  # Interrogate key state
+  if input.was-key-pressed SDL.KEY.ESCAPE
+    running := no
 
   update SDL.get-ticks! - last-frame-time
   draw!
@@ -63,7 +64,6 @@ update = (elapsed-time) ->
   sprite.update elapsed-time
 
 draw = ->
-
   # Instead of graphics.flip at the end, we have graphics.clear at the start
   graphics.clear!
   sprite.draw graphics, 320, 240
@@ -75,6 +75,7 @@ export start = ({ assets }) ->
   SDL.init(SDL.INIT_EVERYTHING);
 
   graphics := require \./graphics
+  input    := new Input
   assets   := assets
   sprite   := new AnimatedSprite assets.MyChar, 0, 0, kTileSize, kTileSize, 15, 3
 
