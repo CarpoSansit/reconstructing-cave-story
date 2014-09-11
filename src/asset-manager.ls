@@ -22,7 +22,7 @@ library    = {}
 
 # Asset classes
 
-class Asset
+export class Asset
   (@name, src) ->
     @ready = no
 
@@ -31,7 +31,7 @@ class Asset
   @not-ready = (asset) -> not asset.ready
 
 
-class ImageAsset extends Asset
+export class ImageAsset extends Asset
   (@name, src, λ = id) ->
     super ...
     @load src, λ

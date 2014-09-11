@@ -7,7 +7,7 @@ Sprite = require \./sprite
 
 module.exports = class AnimatedSprite extends Sprite
 
-  (asset, source-x, source-y, @width, @height, @fps, @num-frames) ->
+  (graphics, path, source-x, source-y, @width, @height, @fps, @num-frames) ->
 
     super ...
 

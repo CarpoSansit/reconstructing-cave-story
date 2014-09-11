@@ -31,9 +31,3 @@ module.exports = class Surface
       src-rect.x, src-rect.y, src-rect.w, src-rect.h,
       dest-rect.x, dest-rect.y, dest-rect.w, dest-rect.h
 
-  @load-image = (image, rect) ->
-    if rect?
-      new Surface image, rect.w, rect.h
-    else
-      new Surface image, image.naturalWidth, image.naturalHeight
-

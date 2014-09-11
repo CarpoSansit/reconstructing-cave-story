@@ -20,8 +20,9 @@ keyboard    = require \./keyboard
 event-queue = require \./event-queue
 
 # SDL Classes
-export Rect    = require \./rect
-export Surface = require \./surface
+export Rect            = require \./rect
+export Surface         = require \./surface
+export UnloadedSurface = require \./unloaded-surface
 
 
 # Reference constants
