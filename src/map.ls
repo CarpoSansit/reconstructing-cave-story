@@ -3,8 +3,28 @@
 
 require! \std
 
+{ div } = std
+
 Game   = require \./game
+Rect   = require \./rectangle
 Sprite = require \./sprite
+
+
+# Constants
+
+[ AIR_TILE, WALL_TILE ] = std.enum
+
+
+# Private class: Tile
+
+class Tile
+  (@type = AIR_TILE, @sprite) ->
+
+
+# Private class: CollisionTile
+
+class CollisionTile
+  (@row, @col, @type) ->
 
 
 # Map class
@@ -12,18 +32,30 @@ Sprite = require \./sprite
 module.exports = class Map
 
   ->
-    # Assumption: this array is an appropriate size
-    @foreground = Map.create-matrix 20, 15
+    @tiles = Map.create-matrix 20, 15
 
   update: (elapsed-time) ->
-    for row in @foreground
-      for cell in row
-        cell?.update elapsed-time
+    for row in @tiles
+      for tile in row
+        tile.sprite?.update elapsed-time
 
   draw: (graphics) ->
-    for row, y in @foreground
-      for cell, x in row
-        cell?.draw graphics, x * Game.kTileSize, y * Game.kTileSize
+    for row, y in @tiles
+      for tile, x in row
+        tile.sprite?.draw graphics, x * Game.kTileSize, y * Game.kTileSize
+
+  get-colliding-tiles: (rect) ->
+    first-row = rectangle.top    `div` Game.kTileSize
+    last-row  = rectangle.bottom `div` Game.kTileSize
+    first-col = rectangle.left   `div` Game.kTileSize
+    last-col  = rectangle.right  `div` Game.kTileSize
+    collision-tiles = []
+
+    for row from first-row to last-row
+      for col from first-col to last-col
+        collision-tiles.push new CollisionTile row, col, @tiles[row][col].type
+
+    return collision-tiles
 
   @create-test-map = (graphics) ->
 
@@ -35,25 +67,25 @@ module.exports = class Map
     row = 11
 
     # Basic block
-    sprite = new Sprite graphics, 'content/PrtCave.bmp',
+    tile = new Tile WALL_TILE, new Sprite graphics, 'content/PrtCave.bmp',
       Game.kTileSize, 0,
       Game.kTileSize, Game.kTileSize
 
     # Floor
     for col from 0 to num-cols
-      map.foreground[row][col] = sprite
+      map.tiles[row][col] = tile
 
     # Steps
-    map.foreground[10][5] = sprite
-    map.foreground[9][4] = sprite
-    map.foreground[8][3] = sprite
-    map.foreground[7][2] = sprite
-    map.foreground[10][3] = sprite
+    map.tiles[10][5] = tile
+    map.tiles[9][4]  = tile
+    map.tiles[8][3]  = tile
+    map.tiles[7][2]  = tile
+    map.tiles[10][3] = tile
 
     return map
 
   @create-matrix = (cols, rows) ->
     for y from 0 to rows
       for z from 0 to cols
-        null
+        new Tile
 
