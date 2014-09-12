@@ -88,7 +88,6 @@ draw = ->
   player.draw graphics, 320, 240
   # no graphics.flip required
 
-
 create-test-world = ->
   player := new Player 320, 240
 

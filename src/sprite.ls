@@ -12,6 +12,8 @@ module.exports = class Sprite
     if Game.kDebugMode
       document.body.append-child @sprite-sheet.canvas
 
+  update: ->
+
   draw: (graphics, x, y) ->
     #std.log 'Sprite::draw', x, y, @width, @height
     dest-rect = new SDL.Rect x, y, @width, @height
