@@ -16,6 +16,10 @@ kSpriteFrameTime     = 15
 kSlowdownFactor      = 0.8
 kWalkingAcceleration = 0.0012
 kMaxSpeedX           = 0.325
+kMaxSpeedY           = 0.325
+kJumpSpeed           = 0.325
+kJumpTime            = 275
+kGravity             = 0.0012
 
 # Enumerated constants
 [ STANDING, WALKING ] = std.enum
@@ -23,11 +27,33 @@ kMaxSpeedX           = 0.325
 
 
 # Private class: SpriteState
-
 class SpriteState
   (@motion-type = STANDING, @horizontal-facing = LEFT) ->
   key: -> "#{@motion-type}-#{@horizontal-facing}"
   @key = (...args) -> args.join '-'
+
+# Private class: Jump
+class Jump
+  ->
+    @time-remaining = 0ms
+    @active         = no
+
+  update: (elapsed-time) ->
+    if @active
+      @time-remaining -= elapsed-time
+      if @time-remaining <= 0
+        @active = no
+
+  reset: ->
+    @time-remaining = kJumpTime
+    @reactivate!
+
+  reactivate: ->
+    @active = @time-remaining > 0
+
+  deactivate: ->
+    @active = no
+
 
 
 # Player class
@@ -36,9 +62,14 @@ module.exports = class Player
   (@x, @y) ->
 
     # Player state (excluding x and y)
+    @velocity-y        = 0
     @velocity-x        = 0
     @acceleration-x    = 0
     @horizontal-facing = LEFT
+    @on-ground         = no
+
+    # Helper instances
+    @jump = new Jump
 
     # Sprite management
     @sprite-state = new SpriteState STANDING, LEFT
@@ -63,15 +94,32 @@ module.exports = class Player
         0, Game.kTileSize, Game.kTileSize, Game.kTileSize, kSpriteFrameTime, 3
 
   update: (elapsed-time) ->
-    @sprites[@get-sprite-state!].update elapsed-time
-    @x += std.round @velocity-x * elapsed-time
-    @velocity-x += @acceleration-x * elapsed-time
 
+    # Propagate update to member instances
+    @sprites[@get-sprite-state!].update elapsed-time
+    @jump.update elapsed-time
+
+    # Update physics
+    @x += std.round @velocity-x * elapsed-time
+    @y += std.round @velocity-y * elapsed-time
+
+    @velocity-x += @acceleration-x * elapsed-time
+    unless @jump.active
+      @velocity-y = std.min @velocity-y + kGravity * elapsed-time, kMaxSpeedY
+
+    # MOCK: Pretend floor
+    if @y >= 320
+      @y = 320
+      @velocity-y = 0
+
+    @on-ground = @y >= 320
+
+    # Impart intention to Quote's position
     if @acceleration-x < 0
       @velocity-x = std.max(@velocity-x, -kMaxSpeedX);
     else if @acceleration-x > 0
       @velocity-x = std.min(@velocity-x, kMaxSpeedX);
-    else
+    else if @on-ground
       @velocity-x *= kSlowdownFactor
 
   get-sprite-state: ->
@@ -91,4 +139,14 @@ module.exports = class Player
 
   stop-moving: ->
     @acceleration-x = 0
+
+  start-jump: ->
+    if @on-ground
+      @jump.reset!
+      @velocity-y = -kJumpSpeed
+    else if @velocity-y < 0
+      @jump.reactivate!
+
+  stop-jump: ->
+    @jump.deactivate!
 

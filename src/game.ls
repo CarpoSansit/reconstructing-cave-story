@@ -56,7 +56,7 @@ event-loop = ->
   if input.was-key-pressed SDL.KEY.ESCAPE
     running := no
 
-  # Arrow keys control the player
+  # Walking
   if (input.is-key-held SDL.KEY.LEFT) and (input.is-key-held SDL.KEY.RIGHT)
     player.stop-moving!
   else if input.is-key-held SDL.KEY.LEFT
@@ -65,6 +65,12 @@ event-loop = ->
     player.start-moving-right!
   else
     player.stop-moving!
+
+  # Jumping
+  if input.was-key-pressed SDL.KEY.Z
+    player.start-jump!
+  else if input.was-key-released SDL.KEY.Z
+    player.stop-jump!
 
 
   # Update and draw world
@@ -99,6 +105,6 @@ export start = ->
 
   # TESTING: Don't let the game loop run too long
   std.delay 10000, ->
-    running := no
+    #running := no
 
 

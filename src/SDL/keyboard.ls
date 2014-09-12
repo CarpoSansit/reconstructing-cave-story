@@ -18,13 +18,18 @@ export KEYCODES =
   UP     : 38
   RIGHT  : 39
   DOWN   : 40
-
+  A      : 65
+  Q      : 81
+  S      : 83
+  W      : 87
+  X      : 88
+  Z      : 90
 
 # Functions
 
 monitor-keys = ->
   document.add-event-listener \keydown, ({ which }) ->
-    std.info which
+    #std.info which
     queue.push-event { type: KEYDOWN, key: which }
     event.prevent-default!
 

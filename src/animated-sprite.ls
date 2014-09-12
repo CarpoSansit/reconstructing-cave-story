@@ -9,7 +9,7 @@ module.exports = class AnimatedSprite extends Sprite
 
   (graphics, path, source-x, source-y, @width, @height, @fps, @num-frames) ->
 
-    std.log 'AnimatedSprite::New -', source-x, source-y, @width, @height
+    #std.log 'AnimatedSprite::New -', source-x, source-y, @width, @height
     super ...
 
     @frame-time    = 1000 / @fps
