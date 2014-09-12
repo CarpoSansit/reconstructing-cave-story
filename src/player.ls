@@ -4,6 +4,7 @@
 require! \std
 require! \./graphics
 
+Game = require \./game
 AnimatedSprite = require \./animated-sprite
 
 
@@ -20,13 +21,12 @@ kMaxSpeedX           = 0.325
 module.exports = class Player
 
   (@x, @y) ->
-    { kTileSize, assets } = require \./game
 
     @velocity-x     = 0
     @acceleration-x = 0
 
     @sprite = new AnimatedSprite graphics, 'content/MyChar.bmp',
-      0, 0, kTileSize, kTileSize, kSpriteFrameTime, 3
+      0, 0, Game.kTileSize, Game.kTileSize, kSpriteFrameTime, 3
 
   update: (elapsed-time) ->
     @sprite.update elapsed-time

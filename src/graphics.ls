@@ -4,8 +4,6 @@
 require! \std
 require! \SDL
 
-{ ImageAsset } = require \./asset-manager
-
 
 # Reference constants
 
@@ -15,7 +13,7 @@ kScreenHeight = 480
 
 # Internal state
 
-screen = SDL.set-video-mode(kScreenWidth, kScreenHeight, SDL.FULLSCREEN)
+screen = SDL.set-video-mode kScreenWidth, kScreenHeight, SDL.FULLSCREEN
 spritesheets = {}
 
 
@@ -23,9 +21,11 @@ spritesheets = {}
 
 export load-image = (path) ->
   if not spritesheets[path]?
-    spritesheets[path] = new SDL.UnloadedSurface path, (surface) ->
-      spritesheets[path] = surface
-  spritesheets[path]
+    std.log 'Graphics::loadImage - no surface for', path, '- creating new surface'
+    spritesheets[path] = new SDL.Surface path
+  else
+    std.log 'Graphics::loadImage - reusing available surface for', path
+  return spritesheets[path]
 
 export blit-surface = (source, src-rect, dest-rect) ->
   SDL.blit-surface source, src-rect, screen, dest-rect

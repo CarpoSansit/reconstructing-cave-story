@@ -17,9 +17,9 @@ Surface = require \./surface
 # Functions
 
 create-new-screen = (w, h, is-fullscreen) ->
-  surf = new Surface null, w, h
-  document.body.append-child surf.canvas
-  return surf
+  screen = new Surface null, w, h
+  document.body.append-child screen.canvas
+  return screen
 
 export set-video-mode = (width, height, flags) ->
   create-new-screen width, height, flags is FULLSCREEN

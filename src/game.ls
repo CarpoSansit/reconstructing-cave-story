@@ -14,8 +14,14 @@ Player = require \./player
 
 # Reference constants
 
-export kFps      = 60
-export kTileSize = 32
+export kDebugMode = on
+export kFps       = 60
+export kTileSize  = 32
+
+
+# Game singleton
+
+std.log "Game - new Game"
 
 
 # Internal state
@@ -25,11 +31,11 @@ player  = null
 last-frame-time = 0
 
 
-# Event loop
-#
-# Obviously JS has an event loop but I want to emulate RCS style where possible
+# Functions
 
 event-loop = ->
+
+  # Obviously JS has an event loop but I want to emulate RCS style where possible
 
   start-time = SDL.get-ticks!
   input.begin-new-frame!
@@ -61,7 +67,7 @@ event-loop = ->
     player.stop-moving!
 
 
-  # Updates and drawing
+  # Update and draw world
   update SDL.get-ticks! - last-frame-time
   draw!
 
@@ -83,21 +89,17 @@ draw = ->
   # no graphics.flip required
 
 
-# Export
-
-export start = ({ assets }) ->
-  SDL.init(SDL.INIT_EVERYTHING);
-
-  # Make asset library available
-  export assets := assets
-
-  # Create game world
+create-test-world = ->
   player := new Player 320, 240
 
-  # Begin game loop
+
+export start = ->
+  SDL.init(SDL.INIT_EVERYTHING);
+  create-test-world!
   event-loop!
 
-  # TESTING: Don't let the game loop run long
+  # TESTING: Don't let the game loop run too long
   std.delay 10000, ->
     running := no
+
 
