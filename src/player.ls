@@ -19,10 +19,12 @@ kMaxSpeedX           = 0.325
 kMaxSpeedY           = 0.325
 kJumpSpeed           = 0.325
 kJumpTime            = 275
+kJumpFrame           = 1
+kFallFrame           = 2
 kGravity             = 0.0012
 
 # Enumerated constants
-[ STANDING, WALKING ] = std.enum
+[ STANDING, WALKING, JUMPING, FALLING ] = std.enum
 [ LEFT, RIGHT ] = std.enum
 
 
@@ -55,7 +57,6 @@ class Jump
     @active = no
 
 
-
 # Player class
 module.exports = class Player
 
@@ -83,7 +84,18 @@ module.exports = class Player
 
     "#{SpriteState.key( WALKING, LEFT )}":
       new AnimatedSprite graphics, 'content/MyChar.bmp',
-        0, 0, Game.kTileSize, Game.kTileSize, kSpriteFrameTime, 3
+        0, 0, Game.kTileSize,
+        Game.kTileSize, kSpriteFrameTime, 3
+
+    "#{SpriteState.key( JUMPING, LEFT )}":
+      new Sprite graphics, 'content/MyChar.bmp',
+        kJumpFrame * Game.kTileSize, 0, Game.kTileSize,
+        Game.kTileSize, kSpriteFrameTime, 3
+
+    "#{SpriteState.key( FALLING, LEFT )}":
+      new Sprite graphics, 'content/MyChar.bmp',
+        kFallFrame * Game.kTileSize, 0, Game.kTileSize,
+        Game.kTileSize, kSpriteFrameTime, 3
 
     "#{SpriteState.key( STANDING, RIGHT )}":
       new Sprite graphics, 'content/MyChar.bmp',
@@ -91,7 +103,18 @@ module.exports = class Player
 
     "#{SpriteState.key( WALKING, RIGHT )}":
       new AnimatedSprite graphics, 'content/MyChar.bmp',
-        0, Game.kTileSize, Game.kTileSize, Game.kTileSize, kSpriteFrameTime, 3
+        0, Game.kTileSize, Game.kTileSize,
+        Game.kTileSize, kSpriteFrameTime, 3
+
+    "#{SpriteState.key( JUMPING, RIGHT )}":
+      new Sprite graphics, 'content/MyChar.bmp',
+        kJumpFrame * Game.kTileSize, Game.kTileSize,
+        Game.kTileSize, Game.kTileSize, kSpriteFrameTime, 3
+
+    "#{SpriteState.key( FALLING, RIGHT )}":
+      new Sprite graphics, 'content/MyChar.bmp',
+        kFallFrame * Game.kTileSize, Game.kTileSize,
+        Game.kTileSize, Game.kTileSize, kSpriteFrameTime, 3
 
   update: (elapsed-time) ->
 
@@ -123,7 +146,11 @@ module.exports = class Player
       @velocity-x *= kSlowdownFactor
 
   get-sprite-state: ->
-    motion-type = if @acceleration-x is 0 then STANDING else WALKING
+    motion-type =
+      if @on-ground
+        if @acceleration-x is 0 then STANDING else WALKING
+      else
+        if @velocity-y < 0 then JUMPING else FALLING
     SpriteState.key motion-type, @horizontal-facing
 
   draw: (graphics) ->
