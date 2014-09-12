@@ -10,6 +10,7 @@ require! \./input
 require! \./graphics
 
 Player = require \./player
+Map    = require \./map
 
 
 # Reference constants
@@ -28,6 +29,7 @@ std.log "Game - new Game"
 
 running = yes
 player  = null
+map     = null
 last-frame-time = 0
 
 
@@ -97,14 +99,17 @@ event-loop = ->
 
 update = (elapsed-time) ->
   player.update elapsed-time
+  map.update elapsed-time
 
 draw = ->
   graphics.clear!
   player.draw graphics, 320, 240
+  map.draw graphics
   # no graphics.flip required
 
 create-test-world = ->
   player := new Player 320, 240
+  map    := Map.create-test-map graphics
 
 
 export start = ->
