@@ -24,8 +24,8 @@ kBackFrame           = 7
 
 # Physics constants
 kFriction            = 0.00049804687
-kGravity             = 0.0012
-kWalkingAcceleration = 0.0008300712
+kGravity             = 0.00078125
+kWalkingAcceleration = 0.00083007812
 kAirAcceleration     = 0.0003125
 kMaxSpeedX           = 0.15859375
 kMaxSpeedY           = 0.2998046875
