@@ -23,20 +23,21 @@ kDownFrame           = 6
 kBackFrame           = 7
 
 # Physics constants
-kSlowdownFactor      = 0.8
-kWalkingAcceleration = 0.0012
-kMaxSpeedX           = 0.325
-kMaxSpeedY           = 0.325
+kFriction            = 0.00049804687
 kGravity             = 0.0012
-kJumpSpeed           = 0.325
-kJumpTime            = 275
+kWalkingAcceleration = 0.0008300712
+kAirAcceleration     = 0.0003125
+kMaxSpeedX           = 0.15859375
+kMaxSpeedY           = 0.2998046875
+kJumpSpeed           = 0.25
+kJumpGravity         = 0.0003125
 
 # Collision spaces
 kCollisionX = new Rect 6, 10, 20, 12
 kCollisionY = new Rect 10, 2, 12, 30
 
 # Enumerated constants
-[ STANDING, WALKING, JUMPING, FALLING ] = std.enum
+[ STANDING, WALKING, JUMPING, FALLING, INTERACTING ] = std.enum
 [ LEFT, RIGHT ] = std.enum
 [ UP, DOWN, HORIZONTAL ] = std.enum
 
@@ -55,30 +56,6 @@ class SpriteState
     args.join '-'
 
 
-# Private class: Jump
-
-class Jump
-  ->
-    @time-remaining = 0ms
-    @active         = no
-
-  update: (elapsed-time) ->
-    if @active
-      @time-remaining -= elapsed-time
-      if @time-remaining <= 0
-        @active = no
-
-  reset: ->
-    @time-remaining = kJumpTime
-    @reactivate!
-
-  reactivate: ->
-    @active = @time-remaining > 0
-
-  deactivate: ->
-    @active = no
-
-
 # Player class
 module.exports = class Player
 
@@ -91,9 +68,7 @@ module.exports = class Player
     @horizontal-facing = LEFT
     @vertical-facing   = HORIZONTAL
     @on-ground         = no
-
-    # Helper instances
-    @jump = new Jump
+    @jump-active       = no
 
     # Sprite management
     @sprite-state = new SpriteState STANDING, LEFT
@@ -140,24 +115,24 @@ module.exports = class Player
     return sprite-map
 
   update: (elapsed-time, map) ->
-
-    # Propagate update to member instances
     @sprites[@get-sprite-state!].update elapsed-time
-    @jump.update elapsed-time
-
-    # Update physics
     @update-x elapsed-time, map
     @update-y elapsed-time, map
 
   update-x: (elapsed-time, map) ->
-    @velocity-x += @acceleration-x * elapsed-time
+    acc-x = if @on-ground then kWalkingAcceleration else kAirAcceleration
+    @velocity-x += @acceleration-x * acc-x * elapsed-time
 
     if @acceleration-x < 0
       @velocity-x = std.max(@velocity-x, -kMaxSpeedX);
     else if @acceleration-x > 0
       @velocity-x = std.min(@velocity-x, kMaxSpeedX);
     else if @on-ground
-      @velocity-x *= kSlowdownFactor
+      @velocity-x =
+        if @velocity-x > 0
+          std.max 0, @velocity-x - kFriction * elapsed-time
+        else
+          std.min 0, @velocity-x + kFriction * elapsed-time
 
     Δx = std.round @velocity-x * elapsed-time
 
@@ -187,8 +162,8 @@ module.exports = class Player
 
 
   update-y: (elapsed-time, map) ->
-    unless @jump.active
-      @velocity-y = std.min @velocity-y + kGravity * elapsed-time, kMaxSpeedY
+    gravity = if @jump-active and @velocity-y < 0 then kJumpGravity else kGravity
+    @velocity-y = std.min @velocity-y + gravity * elapsed-time, kMaxSpeedY
 
     Δy = std.round @velocity-y * elapsed-time
 
@@ -223,6 +198,9 @@ module.exports = class Player
           @on-ground = yes
 
 
+  draw: (graphics) ->
+    @sprites[@get-sprite-state!].draw graphics, @x, @y
+
   get-sprite-state: ->
     motion-type =
       if @on-ground
@@ -230,9 +208,6 @@ module.exports = class Player
       else
         if @velocity-y < 0 then JUMPING else FALLING
     SpriteState.key motion-type, @horizontal-facing, @vertical-facing
-
-  draw: (graphics) ->
-    @sprites[@get-sprite-state!].draw graphics, @x, @y
 
 
   # Collision spaces
@@ -266,11 +241,11 @@ module.exports = class Player
 
   start-moving-left: ->
     @horizontal-facing = LEFT
-    @acceleration-x = -kWalkingAcceleration
+    @acceleration-x = -1
 
   start-moving-right: ->
     @horizontal-facing = RIGHT
-    @acceleration-x = kWalkingAcceleration
+    @acceleration-x = 1
 
   stop-moving: ->
     @acceleration-x = 0
@@ -279,14 +254,12 @@ module.exports = class Player
   # Jumping methods
 
   start-jump: ->
+    @jump-active = yes
     if @on-ground
-      @jump.reset!
       @velocity-y = -kJumpSpeed
-    else if @velocity-y < 0
-      @jump.reactivate!
 
   stop-jump: ->
-    @jump.deactivate!
+    @jump-active = no
 
 
   # Looking methods
