@@ -30,7 +30,8 @@ std.log "Game - new Game"
 running = yes
 player  = null
 map     = null
-last-frame-time = 0
+last-frame-time  = 0
+any-keys-pressed = no
 
 
 # Functions
@@ -44,6 +45,7 @@ event-loop = ->
 
   # Consume input events
   while event = SDL.poll-event!
+    any-keys-pressed := yes
     switch event.type
     | SDL.KEYDOWN => input.key-down-event event
     | SDL.KEYUP   => input.key-up-event   event
@@ -118,6 +120,8 @@ export start = ->
 
   # TESTING: Don't let the game loop run too long
   std.delay 5000, ->
-    running := no
-
+    if !any-keys-pressed
+      running := no
+    else
+      std.log "Game being interacted with. Don't shut down"
 

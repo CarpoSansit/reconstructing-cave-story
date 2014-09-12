@@ -5,6 +5,7 @@ require! \std
 require! \./graphics
 
 Game           = require \./game
+Map            = require \./map
 Rect           = require \./rectangle
 Sprite         = require \./sprite
 AnimatedSprite = require \./animated-sprite
@@ -12,7 +13,7 @@ AnimatedSprite = require \./animated-sprite
 
 # Animation constants
 kSpriteFrameTime     = 15
-kCharacterFrame      = 0
+kCharacterFrame      = 20
 kWalkFrame           = 0
 kStandFrame          = 0
 kJumpFrame           = 1
@@ -145,27 +146,82 @@ module.exports = class Player
     @jump.update elapsed-time
 
     # Update physics
-    @x += std.round @velocity-x * elapsed-time
-    @y += std.round @velocity-y * elapsed-time
+    @update-x elapsed-time, map
+    @update-y elapsed-time, map
 
+  update-x: (elapsed-time, map) ->
     @velocity-x += @acceleration-x * elapsed-time
-    unless @jump.active
-      @velocity-y = std.min @velocity-y + kGravity * elapsed-time, kMaxSpeedY
 
-    # MOCK: Pretend floor
-    if @y >= 320
-      @y = 320
-      @velocity-y = 0
-    @on-ground = @y >= 320
-    # MOCK: Pretend floor
-
-    # Impart intention to Quote's position
     if @acceleration-x < 0
       @velocity-x = std.max(@velocity-x, -kMaxSpeedX);
     else if @acceleration-x > 0
       @velocity-x = std.min(@velocity-x, kMaxSpeedX);
     else if @on-ground
       @velocity-x *= kSlowdownFactor
+
+    Δx = std.round @velocity-x * elapsed-time
+
+    if Δx > 0
+      @on-wall-collision map, (@right-collision Δx), (tile) ->
+        if tile
+          @x = tile.col * Game.kTileSize - kCollisionX.right
+          @velocity-x = 0
+        else
+          @x += Δx
+
+      @on-wall-collision map, (@left-collision 0), (tile) ->
+        if tile
+          @x = tile.col * Game.kTileSize + kCollisionX.right
+
+    else
+      @on-wall-collision map, (@left-collision Δx), (tile) ->
+        if tile
+          @x = tile.col * Game.kTileSize + kCollisionX.right
+          @velocity-x = 0
+        else
+          @x += Δx
+
+      @on-wall-collision map, (@right-collision 0), (tile) ->
+        if tile
+          @x = tile.col * Game.kTileSize - kCollisionX.right
+
+
+  update-y: (elapsed-time, map) ->
+    unless @jump.active
+      @velocity-y = std.min @velocity-y + kGravity * elapsed-time, kMaxSpeedY
+
+    Δy = std.round @velocity-y * elapsed-time
+
+    # Falling
+    if Δy > 0
+      @on-wall-collision map, (@bottom-collision Δy), (tile) ->
+        if tile
+          @y = tile.row * Game.kTileSize - kCollisionY.bottom
+          @velocity-y = 0
+          @on-ground = yes
+        else
+          @y += Δy
+          @on-ground = no
+
+      @on-wall-collision map, (@top-collision 0), (tile) ->
+        if tile
+          @y = tile.row * Game.kTileSize + kCollisionY.h
+
+    # Jumping
+    else
+      @on-wall-collision map, (@top-collision Δy), (tile) ->
+        if tile
+          @y = tile.row * Game.kTileSize + kCollisionY.h
+          @velocity-y = 0
+        else
+          @y += Δy
+          @on-ground = no
+
+      @on-wall-collision map, (@bottom-collision 0), (tile) ->
+        if tile
+          @y = tile.row * Game.kTileSize - kCollisionY.bottom
+          @on-ground = yes
+
 
   get-sprite-state: ->
     motion-type =
@@ -198,6 +254,12 @@ module.exports = class Player
     new Rect @x + kCollisionY.left,
       @y + kCollisionY.top + kCollisionY.h/2 + Δ
       kCollisionY.w, kCollisionY.h/2 + Δ
+
+  on-wall-collision: (map, rect, λ) ->
+    for tile in map.get-colliding-tiles rect
+      if tile.type is Map.WALL_TILE
+        return λ.call this, tile
+    λ.call this
 
 
   # Walking methods

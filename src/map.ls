@@ -45,10 +45,10 @@ module.exports = class Map
         tile.sprite?.draw graphics, x * Game.kTileSize, y * Game.kTileSize
 
   get-colliding-tiles: (rect) ->
-    first-row = rectangle.top    `div` Game.kTileSize
-    last-row  = rectangle.bottom `div` Game.kTileSize
-    first-col = rectangle.left   `div` Game.kTileSize
-    last-col  = rectangle.right  `div` Game.kTileSize
+    first-row = rect.top    `div` Game.kTileSize
+    last-row  = rect.bottom `div` Game.kTileSize
+    first-col = rect.left   `div` Game.kTileSize
+    last-col  = rect.right  `div` Game.kTileSize
     collision-tiles = []
 
     for row from first-row to last-row
@@ -88,4 +88,8 @@ module.exports = class Map
     for y from 0 to rows
       for z from 0 to cols
         new Tile
+
+
+  @WALL_TILE = WALL_TILE
+  @AIR_TILE  = AIR_TILE
 
