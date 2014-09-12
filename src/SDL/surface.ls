@@ -18,13 +18,13 @@ module.exports = class Surface
     @reset-canvas-size!
 
     if typeof src is \string
-      std.log 'SDL::Surface - src unloaded. Loading...', src
+      #std.log 'SDL::Surface - src unloaded. Loading...', src
       @load-image-data src
     else if src?
-      std.log 'SDL::Surface - src already prepared:', src
+      #std.log 'SDL::Surface - src already prepared:', src
       @save-image-data src
     else
-      std.log 'SDL::Surface - Blank surface created'
+      #std.log 'SDL::Surface - Blank surface created'
 
   reset-canvas-size: ->
     @canvas.width  = @width
@@ -39,13 +39,13 @@ module.exports = class Surface
   load-image-data: (path) ->
     data = new Image
     data.onload = ~>
-      std.log 'SDL::Surface::loadImageData - asset ready:', path
+      #std.log 'SDL::Surface::loadImageData - asset ready:', path
       @inherit-size-from-image data
       @save-image-data data
     data.src = path
 
   save-image-data: (data) ->
-    std.log 'SDL::Surface::saveImageData -', data
+    #std.log 'SDL::Surface::saveImageData -', data
     @data  = data
     @ready = yes
     @ctx.draw-image @data, 0, 0, @width, @height
