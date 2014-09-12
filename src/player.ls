@@ -11,30 +11,46 @@ AnimatedSprite = require \./animated-sprite
 
 # Animation constants
 kSpriteFrameTime     = 15
+kCharacterFrame      = 0
+kWalkFrame           = 0
+kStandFrame          = 0
+kJumpFrame           = 1
+kFallFrame           = 2
+kUpFrameOffset       = 3
+kDownFrame           = 6
+kBackFrame           = 7
 
 # Physics constants
 kSlowdownFactor      = 0.8
 kWalkingAcceleration = 0.0012
 kMaxSpeedX           = 0.325
 kMaxSpeedY           = 0.325
+kGravity             = 0.0012
 kJumpSpeed           = 0.325
 kJumpTime            = 275
-kJumpFrame           = 1
-kFallFrame           = 2
-kGravity             = 0.0012
 
 # Enumerated constants
 [ STANDING, WALKING, JUMPING, FALLING ] = std.enum
 [ LEFT, RIGHT ] = std.enum
+[ UP, DOWN, HORIZONTAL ] = std.enum
 
 
 # Private class: SpriteState
+
 class SpriteState
-  (@motion-type = STANDING, @horizontal-facing = LEFT) ->
-  key: -> "#{@motion-type}-#{@horizontal-facing}"
-  @key = (...args) -> args.join '-'
+  ( @motion-type       = STANDING,
+    @horizontal-facing = LEFT,
+    @vertical-facing   = HORIZONTAL ) ->
+
+  key: ->
+    "#{@motion-type}-#{@horizontal-facing}-#{@vertical-facing}"
+
+  @key = (...args) ->
+    args.join '-'
+
 
 # Private class: Jump
+
 class Jump
   ->
     @time-remaining = 0ms
@@ -67,6 +83,7 @@ module.exports = class Player
     @velocity-x        = 0
     @acceleration-x    = 0
     @horizontal-facing = LEFT
+    @vertical-facing   = HORIZONTAL
     @on-ground         = no
 
     # Helper instances
@@ -76,45 +93,45 @@ module.exports = class Player
     @sprite-state = new SpriteState STANDING, LEFT
     @sprites = @initialise-sprites!
 
+  initialise-sprite: (motion, hfacing, vfacing) ->
+    source-x =
+      switch motion
+      | WALKING  => kWalkFrame  * Game.kTileSize
+      | STANDING => kStandFrame * Game.kTileSize
+      | JUMPING  => kJumpFrame  * Game.kTileSize
+      | FALLING  => kFallFrame  * Game.kTileSize
+      | _ => void
+
+    source-x += if vfacing is UP then kUpFrameOffset * Game.kTileSize else 0
+
+    source-y =
+      if hfacing is LEFT
+        kCharacterFrame * Game.kTileSize
+      else
+        (kCharacterFrame + 1) * Game.kTileSize
+
+    if motion is WALKING
+      new AnimatedSprite graphics, 'content/MyChar.bmp',
+        source-x, source-y, Game.kTileSize, Game.kTileSize,
+        kSpriteFrameTime, 3
+    else
+      if vfacing is DOWN
+        source-x =
+          if motion is STANDING
+            kBackFrame * Game.kTileSize
+          else
+            kDownFrame * Game.kTileSize
+
+      new Sprite graphics, 'content/MyChar.bmp',
+        source-x, source-y, Game.kTileSize, Game.kTileSize
+
   initialise-sprites: (sprite-map = {}) ->
-
-    "#{SpriteState.key( STANDING, LEFT )}":
-      new Sprite graphics, 'content/MyChar.bmp',
-        0, 0, Game.kTileSize, Game.kTileSize
-
-    "#{SpriteState.key( WALKING, LEFT )}":
-      new AnimatedSprite graphics, 'content/MyChar.bmp',
-        0, 0, Game.kTileSize,
-        Game.kTileSize, kSpriteFrameTime, 3
-
-    "#{SpriteState.key( JUMPING, LEFT )}":
-      new Sprite graphics, 'content/MyChar.bmp',
-        kJumpFrame * Game.kTileSize, 0, Game.kTileSize,
-        Game.kTileSize, kSpriteFrameTime, 3
-
-    "#{SpriteState.key( FALLING, LEFT )}":
-      new Sprite graphics, 'content/MyChar.bmp',
-        kFallFrame * Game.kTileSize, 0, Game.kTileSize,
-        Game.kTileSize, kSpriteFrameTime, 3
-
-    "#{SpriteState.key( STANDING, RIGHT )}":
-      new Sprite graphics, 'content/MyChar.bmp',
-        0, Game.kTileSize, Game.kTileSize, Game.kTileSize
-
-    "#{SpriteState.key( WALKING, RIGHT )}":
-      new AnimatedSprite graphics, 'content/MyChar.bmp',
-        0, Game.kTileSize, Game.kTileSize,
-        Game.kTileSize, kSpriteFrameTime, 3
-
-    "#{SpriteState.key( JUMPING, RIGHT )}":
-      new Sprite graphics, 'content/MyChar.bmp',
-        kJumpFrame * Game.kTileSize, Game.kTileSize,
-        Game.kTileSize, Game.kTileSize, kSpriteFrameTime, 3
-
-    "#{SpriteState.key( FALLING, RIGHT )}":
-      new Sprite graphics, 'content/MyChar.bmp',
-        kFallFrame * Game.kTileSize, Game.kTileSize,
-        Game.kTileSize, Game.kTileSize, kSpriteFrameTime, 3
+    for motion in [ STANDING, WALKING, JUMPING, FALLING ]
+      for hfacing in [ LEFT, RIGHT ]
+        for vfacing in [ UP, DOWN, HORIZONTAL ]
+          sprite-map[ SpriteState.key motion, hfacing, vfacing ] =
+            @initialise-sprite motion, hfacing, vfacing
+    return sprite-map
 
   update: (elapsed-time) ->
 
@@ -134,8 +151,8 @@ module.exports = class Player
     if @y >= 320
       @y = 320
       @velocity-y = 0
-
     @on-ground = @y >= 320
+    # MOCK: Pretend floor
 
     # Impart intention to Quote's position
     if @acceleration-x < 0
@@ -151,10 +168,13 @@ module.exports = class Player
         if @acceleration-x is 0 then STANDING else WALKING
       else
         if @velocity-y < 0 then JUMPING else FALLING
-    SpriteState.key motion-type, @horizontal-facing
+    SpriteState.key motion-type, @horizontal-facing, @vertical-facing
 
   draw: (graphics) ->
     @sprites[@get-sprite-state!].draw graphics, @x, @y
+
+
+  # Walking methods
 
   start-moving-left: ->
     @horizontal-facing = LEFT
@@ -167,6 +187,9 @@ module.exports = class Player
   stop-moving: ->
     @acceleration-x = 0
 
+
+  # Jumping methods
+
   start-jump: ->
     if @on-ground
       @jump.reset!
@@ -176,4 +199,17 @@ module.exports = class Player
 
   stop-jump: ->
     @jump.deactivate!
+
+
+  # Looking methods
+
+  look-up: ->
+    @vertical-facing = UP
+
+  look-down: ->
+    @vertical-facing = DOWN
+
+  look-horizontal: ->
+    @vertical-facing = HORIZONTAL
+
 

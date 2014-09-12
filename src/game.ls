@@ -72,6 +72,15 @@ event-loop = ->
   else if input.was-key-released SDL.KEY.Z
     player.stop-jump!
 
+  # Looking
+  if (input.is-key-held SDL.KEY.UP) and (input.is-key-held SDL.KEY.DOWN)
+    player.look-horizontal!
+  else if input.is-key-held SDL.KEY.UP
+    player.look-up!
+  else if input.is-key-held SDL.KEY.DOWN
+    player.look-down!
+  else
+    player.look-horizontal!
 
   # Update and draw world
   update SDL.get-ticks! - last-frame-time
