@@ -96,9 +96,8 @@ event-loop = ->
   else
     std.log 'Game stopped.'
 
-
 update = (elapsed-time) ->
-  player.update elapsed-time
+  player.update elapsed-time, map
   map.update elapsed-time
 
 draw = ->
@@ -118,7 +117,7 @@ export start = ->
   event-loop!
 
   # TESTING: Don't let the game loop run too long
-  std.delay 10000, ->
-    #running := no
+  std.delay 5000, ->
+    running := no
 
 

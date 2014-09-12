@@ -5,6 +5,7 @@ require! \std
 require! \./graphics
 
 Game           = require \./game
+Rect           = require \./rectangle
 Sprite         = require \./sprite
 AnimatedSprite = require \./animated-sprite
 
@@ -28,6 +29,10 @@ kMaxSpeedY           = 0.325
 kGravity             = 0.0012
 kJumpSpeed           = 0.325
 kJumpTime            = 275
+
+# Collision spaces
+kCollisionX = new Rect 6, 10, 20, 12
+kCollisionY = new Rect 10, 2, 12, 30
 
 # Enumerated constants
 [ STANDING, WALKING, JUMPING, FALLING ] = std.enum
@@ -133,7 +138,7 @@ module.exports = class Player
             @initialise-sprite motion, hfacing, vfacing
     return sprite-map
 
-  update: (elapsed-time) ->
+  update: (elapsed-time, map) ->
 
     # Propagate update to member instances
     @sprites[@get-sprite-state!].update elapsed-time
@@ -172,6 +177,27 @@ module.exports = class Player
 
   draw: (graphics) ->
     @sprites[@get-sprite-state!].draw graphics, @x, @y
+
+
+  # Collision spaces
+
+  left-collision: (Δ) -> # Δ <= 0
+    new Rect @x + kCollisionX.left + Δ, @y + kCollisionX.top,
+      kCollisionX.w/2 - Δ, kCollisionX.h
+
+  right-collision: (Δ) -> # Δ >= 0
+    new Rect @x + kCollisionX.left + kCollisionX.w/2,
+      @y + kCollisionX.top,
+      kCollisionX.w/2 + Δ, kCollisionX.h
+
+  top-collision: (Δ) ->
+    new Rect @x + kCollisionY.left, @y + kCollisionY.top + Δ,
+      kCollisionY.w, kCollisionY.h/2 - Δ
+
+  bottom-collision: (Δ) ->
+    new Rect @x + kCollisionY.left,
+      @y + kCollisionY.top + kCollisionY.h/2 + Δ
+      kCollisionY.w, kCollisionY.h/2 + Δ
 
 
   # Walking methods
