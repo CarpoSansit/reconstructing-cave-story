@@ -8,6 +8,7 @@ require! \SDL
 
 require! \./input
 require! \./graphics
+require! \./readout
 
 Player = require \./player
 Map    = require \./map
@@ -46,6 +47,7 @@ event-loop = ->
   # Consume input events
   while event = SDL.poll-event!
     any-keys-pressed := yes
+    readout.update \willstop, false
     switch event.type
     | SDL.KEYDOWN => input.key-down-event event
     | SDL.KEYUP   => input.key-up-event   event
@@ -87,13 +89,16 @@ event-loop = ->
     player.look-horizontal!
 
   # Update and draw world
-  update SDL.get-ticks! - last-frame-time
+  Δt = SDL.get-ticks! - last-frame-time
+  update Δt
+  readout.update \fps std.round 1000 / Δt
   draw!
 
   # Queue next frame
   if running
     last-frame-time := SDL.get-ticks!
     elapsed-time = last-frame-time - start-time
+    readout.update \drawtime, elapsed-time
     SDL.delay 1000ms / kFps - elapsed-time, event-loop
   else
     std.log 'Game stopped.'
@@ -116,6 +121,12 @@ create-test-world = ->
 export start = ->
   SDL.init(SDL.INIT_EVERYTHING);
   create-test-world!
+  readout.add-reader \fps, 'FPS'
+  readout.add-reader \drawtime, 'Draw time'
+  readout.add-reader \willstop, 'Will stop', true
+  readout.add-reader \debug, 'Debug mode', kDebugMode
+
+  # Begin game loop
   event-loop!
 
   # TESTING: Don't let the game loop run too long

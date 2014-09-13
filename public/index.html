@@ -4,9 +4,25 @@
   <meta charset="UTF-8" />
   <title>Reconstructing Cave Story</title>
   <style>
-    html { background: black; text-align: center; }
-    canvas { display: block; float: left; border: 1px solid grey; }
-    canvas + canvas { max-width: 175px; margin-left: 10px; }
+    html {
+      background: black;
+    }
+
+    canvas, table {
+      float: left;
+      max-width: 160px;
+      border: 1px solid grey;
+      margin: 0 10px 10px 0;
+    }
+
+    canvas:first-of-type {
+      max-width: none;
+    }
+
+    table {
+      margin-bottom: 10px;
+    }
+
   </style>
 </head>
 <body>

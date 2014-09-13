@@ -3,6 +3,7 @@
 
 require! \std
 require! \./graphics
+require! \./readout
 
 Game           = require \./game
 Map            = require \./map
@@ -37,9 +38,9 @@ kCollisionX = new Rect 6, 10, 20, 12
 kCollisionY = new Rect 10, 2, 12, 30
 
 # Enumerated constants
-[ STANDING, WALKING, JUMPING, FALLING, INTERACTING ] = std.enum
-[ LEFT, RIGHT ] = std.enum
-[ UP, DOWN, HORIZONTAL ] = std.enum
+[ STANDING, WALKING, JUMPING, FALLING, INTERACTING ] = <[ S W J F I ]>
+[ LEFT, RIGHT ] = <[ L R ]>
+[ UP, DOWN, HORIZONTAL ] = <[ U D H ]>
 
 
 # Private class: SpriteState
@@ -69,18 +70,23 @@ module.exports = class Player
     @vertical-facing   = HORIZONTAL
     @on-ground         = no
     @jump-active       = no
+    @interacting       = no
 
     # Sprite management
-    @sprite-state = new SpriteState STANDING, LEFT
     @sprites = @initialise-sprites!
+
+    # Debug
+    if Game.kDebugMode
+      readout.add-reader \spritestate, 'SpriteState'
 
   initialise-sprite: (motion, hfacing, vfacing) ->
     source-x =
       switch motion
-      | WALKING  => kWalkFrame  * Game.kTileSize
-      | STANDING => kStandFrame * Game.kTileSize
-      | JUMPING  => kJumpFrame  * Game.kTileSize
-      | FALLING  => kFallFrame  * Game.kTileSize
+      | WALKING     => kWalkFrame  * Game.kTileSize
+      | STANDING    => kStandFrame * Game.kTileSize
+      | JUMPING     => kJumpFrame  * Game.kTileSize
+      | FALLING     => kFallFrame  * Game.kTileSize
+      | INTERACTING => kBackFrame  * Game.kTileSize
       | _ => void
 
     source-x += if vfacing is UP then kUpFrameOffset * Game.kTileSize else 0
@@ -96,18 +102,14 @@ module.exports = class Player
         source-x, source-y, Game.kTileSize, Game.kTileSize,
         kSpriteFrameTime, 3
     else
-      if vfacing is DOWN
-        source-x =
-          if motion is STANDING
-            kBackFrame * Game.kTileSize
-          else
-            kDownFrame * Game.kTileSize
+      if vfacing is DOWN and (motion is JUMPING or motion is FALLING)
+        source-x = kDownFrame * Game.kTileSize
 
       new Sprite graphics, 'content/MyChar.bmp',
         source-x, source-y, Game.kTileSize, Game.kTileSize
 
   initialise-sprites: (sprite-map = {}) ->
-    for motion in [ STANDING, WALKING, JUMPING, FALLING ]
+    for motion in [ STANDING, WALKING, JUMPING, FALLING, INTERACTING ]
       for hfacing in [ LEFT, RIGHT ]
         for vfacing in [ UP, DOWN, HORIZONTAL ]
           sprite-map[ SpriteState.key motion, hfacing, vfacing ] =
@@ -203,11 +205,15 @@ module.exports = class Player
 
   get-sprite-state: ->
     motion-type =
-      if @on-ground
+      if @interacting
+        INTERACTING
+      else if @on-ground
         if @acceleration-x is 0 then STANDING else WALKING
       else
         if @velocity-y < 0 then JUMPING else FALLING
-    SpriteState.key motion-type, @horizontal-facing, @vertical-facing
+    key = SpriteState.key motion-type, @horizontal-facing, @vertical-facing
+    readout.update \spritestate, key
+    return key
 
 
   # Collision spaces
@@ -237,40 +243,38 @@ module.exports = class Player
     λ.call this
 
 
-  # Walking methods
+  # Button handlers
 
   start-moving-left: ->
     @horizontal-facing = LEFT
     @acceleration-x = -1
+    @interacting = no
 
   start-moving-right: ->
     @horizontal-facing = RIGHT
     @acceleration-x = 1
+    @interacting = no
 
   stop-moving: ->
     @acceleration-x = 0
 
-
-  # Jumping methods
-
   start-jump: ->
     @jump-active = yes
-    if @on-ground
-      @velocity-y = -kJumpSpeed
+    @interacting = no
+    @velocity-y = -kJumpSpeed if @on-ground
 
   stop-jump: ->
     @jump-active = no
 
-
-  # Looking methods
-
   look-up: ->
     @vertical-facing = UP
+    @interacting = no
 
   look-down: ->
+    return if @vertical-facing is DOWN
     @vertical-facing = DOWN
+    @interacting = @on-ground
 
   look-horizontal: ->
     @vertical-facing = HORIZONTAL
-
 
