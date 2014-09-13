@@ -4,10 +4,12 @@
 require! \std
 require! \SDL
 
+{ kTileSize } = require \./game
+
 
 # Const
 
-kBackgroundSize = 128
+kBackgroundSize = kTileSize * 4
 
 
 

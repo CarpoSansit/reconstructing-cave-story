@@ -17,9 +17,12 @@ Map    = require \./map
 
 # Reference constants
 
-export kDebugMode = on
-export kFps       = 60
-export kTileSize  = 32
+export kDebugMode    = on
+
+export kFps          = 60
+export kTileSize     = 16
+export kScreenWidth  = 320
+export kScreenHeight = 240
 
 
 # Game singleton
@@ -111,12 +114,12 @@ update = (elapsed-time) ->
 draw = ->
   graphics.clear!
   map.draw-background graphics
-  player.draw graphics, 320, 240
+  player.draw graphics
   map.draw graphics
   # no graphics.flip required
 
 create-test-world = ->
-  player   := new Player 320, 240
+  player   := new Player kScreenWidth/2, kScreenHeight/2
   map      := Map.create-test-map graphics
 
 
