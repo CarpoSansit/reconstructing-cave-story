@@ -4,6 +4,8 @@
 require! \std
 require! \SDL
 
+Game = require \./game
+
 
 # Reference constants
 
@@ -23,6 +25,10 @@ export load-image = (path) ->
   if not spritesheets[path]?
     std.log 'Graphics::loadImage - no surface for', path, '- creating new surface'
     spritesheets[path] = new SDL.Surface path
+
+    if Game.kDebugMode
+      document.body.append-child spritesheets[path].canvas
+
   else
     std.log 'Graphics::loadImage - reusing available surface for', path
   return spritesheets[path]

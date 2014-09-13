@@ -12,6 +12,7 @@ require! \./readout
 
 Player = require \./player
 Map    = require \./map
+{ FixedBackdrop } = require \./backdrop
 
 
 # Reference constants
@@ -28,9 +29,9 @@ std.log "Game - new Game"
 
 # Internal state
 
-running = yes
-player  = null
-map     = null
+running  = yes
+player   = null
+map      = null
 last-frame-time  = 0
 any-keys-pressed = no
 
@@ -109,22 +110,25 @@ update = (elapsed-time) ->
 
 draw = ->
   graphics.clear!
+  map.draw-background graphics
   player.draw graphics, 320, 240
   map.draw graphics
   # no graphics.flip required
 
 create-test-world = ->
-  player := new Player 320, 240
-  map    := Map.create-test-map graphics
+  player   := new Player 320, 240
+  map      := Map.create-test-map graphics
 
 
 export start = ->
   SDL.init(SDL.INIT_EVERYTHING);
-  create-test-world!
+
   readout.add-reader \fps, 'FPS'
   readout.add-reader \drawtime, 'Draw time'
   readout.add-reader \willstop, 'Will stop', true
   readout.add-reader \debug, 'Debug mode', kDebugMode
+
+  create-test-world!
 
   # Begin game loop
   event-loop!

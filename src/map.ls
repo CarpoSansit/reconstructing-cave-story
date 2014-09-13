@@ -9,6 +9,8 @@ Game   = require \./game
 Rect   = require \./rectangle
 Sprite = require \./sprite
 
+{ FixedBackdrop } = require \./backdrop
+
 
 # Constants
 
@@ -32,6 +34,7 @@ class CollisionTile
 module.exports = class Map
 
   ->
+    @backdrop = null
     @tiles = Map.create-matrix 20, 15
 
   update: (elapsed-time) ->
@@ -43,6 +46,9 @@ module.exports = class Map
     for row, y in @tiles
       for tile, x in row
         tile.sprite?.draw graphics, x * Game.kTileSize, y * Game.kTileSize
+
+  draw-background: (graphics) ->
+    @backdrop.draw graphics
 
   get-colliding-tiles: (rect) ->
     first-row = rect.top    `div` Game.kTileSize
@@ -59,11 +65,15 @@ module.exports = class Map
 
   @create-test-map = (graphics) ->
 
+    # new map
     map = new Map
 
+    # Create imple backdrop
+    map.backdrop = new FixedBackdrop 'content/bkBlue.bmp', graphics
+
+    # Create tile layout
     num-rows = 15
     num-cols = 20
-
     row = 11
 
     # Basic block
@@ -88,7 +98,6 @@ module.exports = class Map
     for y from 0 to rows
       for z from 0 to cols
         new Tile
-
 
   @WALL_TILE = WALL_TILE
   @AIR_TILE  = AIR_TILE

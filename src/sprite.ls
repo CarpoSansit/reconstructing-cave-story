@@ -9,9 +9,6 @@ module.exports = class Sprite
     @source-rect  = new SDL.Rect source-x, source-y, width, height
     @sprite-sheet = graphics.load-image path
 
-    if Game.kDebugMode
-      document.body.append-child @sprite-sheet.canvas
-
   update: ->
 
   draw: (graphics, x, y) ->
