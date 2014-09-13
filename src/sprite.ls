@@ -12,7 +12,6 @@ module.exports = class Sprite
   update: ->
 
   draw: (graphics, x, y) ->
-    #std.log 'Sprite::draw', x, y, @width, @height
     dest-rect = new SDL.Rect x, y, @width, @height
     graphics.blit-surface @sprite-sheet, @source-rect, dest-rect
 

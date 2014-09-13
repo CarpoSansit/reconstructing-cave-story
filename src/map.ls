@@ -35,7 +35,8 @@ module.exports = class Map
 
   ->
     @backdrop = null
-    @tiles = Map.create-matrix 20, 15
+    @tiles    = Map.create-matrix (new Tile), 20, 15
+    @bg-tiles = Map.create-matrix null, 20, 15
 
   update: (elapsed-time) ->
     for row in @tiles
@@ -49,6 +50,10 @@ module.exports = class Map
 
   draw-background: (graphics) ->
     @backdrop.draw graphics
+
+    for row, y in @bg-tiles
+      for sprite, x in row
+        sprite?.draw graphics, x * Game.kTileSize, y * Game.kTileSize
 
   get-colliding-tiles: (rect) ->
     first-row = rect.top    `div` Game.kTileSize
@@ -92,12 +97,19 @@ module.exports = class Map
     map.tiles[7][2]  = tile
     map.tiles[10][3] = tile
 
+    # Background tiles
+    chain-top = new Sprite graphics, 'content/PrtCave.bmp', 11 * Game.kTileSize, 2 * Game.kTileSize, Game.kTileSize, Game.kTileSize
+    chain-mid = new Sprite graphics, 'content/PrtCave.bmp', 12 * Game.kTileSize, 2 * Game.kTileSize, Game.kTileSize, Game.kTileSize
+    chain-btm = new Sprite graphics, 'content/PrtCave.bmp', 13 * Game.kTileSize, 2 * Game.kTileSize, Game.kTileSize, Game.kTileSize
+
+    map.bg-tiles[8][2] = chain-top
+    map.bg-tiles[9][2] = chain-mid
+    map.bg-tiles[10][2] = chain-btm
+
     return map
 
-  @create-matrix = (cols, rows) ->
-    for y from 0 to rows
-      for z from 0 to cols
-        new Tile
+  @create-matrix = (value, cols, rows) ->
+    [ [ value for z from 0 to cols ] for y from 0 to rows ]
 
   @WALL_TILE = WALL_TILE
   @AIR_TILE  = AIR_TILE
