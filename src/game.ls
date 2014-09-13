@@ -131,7 +131,7 @@ draw = ->
   bat.draw graphics
   player.draw graphics
   map.draw graphics
-  # No graphics.flip required
+  player.draw-hud graphics
 
 # Game::create-test-world
 create-test-world = ->
@@ -160,7 +160,8 @@ export start = ->
   # TESTING: Don't let the game loop run too long
   std.delay 5000, ->
     if !any-keys-pressed
-      void#running := no
+      void
+      #running := no
     else
       std.log "Game being interacted with. Don't shut down"
 

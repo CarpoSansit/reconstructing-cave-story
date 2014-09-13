@@ -9,6 +9,8 @@ require! \./config
 require! \./readout
 
 
+{ kHalfTile, tile-to-game, tile-to-px } = units
+
 { WALL_TILE }              = require \./map
 { Rectangle: Rect }        = require \./rectangle
 { Sprite, AnimatedSprite } = require \./sprite
@@ -40,6 +42,12 @@ kJumpGravity         = 0.0003125
 kInvincibleTime      = 3000
 kInvincibleFlashTime = 50
 
+# HUD Position
+kHealthBarX  = tile-to-game 1
+kHealthBarY  = tile-to-game 2
+kHealthFillX = tile-to-game 2.5
+kHealthFillY = tile-to-game 2
+
 # Collision boxes
 kCollisionX = new Rect 6, 10, 20, 12
 kCollisionY = new Rect 10, 2, 12, 30
@@ -70,7 +78,7 @@ class SpriteState
 
 export class Player
 
-  # Player (Game, Game) - Initial position
+  # Player (Game, Game) - Initial position - constructor
 
   (graphics, @x, @y) ->
 
@@ -87,6 +95,16 @@ export class Player
 
     # Timers
     @invincible-time = 0
+
+    # HUD
+    @health-bar-sprite = new Sprite graphics, 'data/16x16/TextBox.bmp',
+      0, tile-to-px(2.5), tile-to-px(4), tile-to-px(0.5)
+
+    @health-fill-sprite = new Sprite graphics, 'data/16x16/TextBox.bmp',
+      0, tile-to-px(1.5), tile-to-px(2.5) - 1, tile-to-px(0.5)
+
+    @three = new Sprite graphics, 'data/16x16/TextBox.bmp',
+      tile-to-px(1.5), tile-to-px(3.5), tile-to-px(0.5), tile-to-px(0.5)
 
     # Sprite management
     @sprites = @initialise-sprites graphics
@@ -225,10 +243,17 @@ export class Player
       @invincible = yes
       @invincible-time = 0
 
-  draw: (graphics) ->
-    if @invincible and @invincible-time `std.div` kInvincibleFlashTime % 2 is 0
-      return
+  sprite-is-visible: ->
+    not (@invincible and @invincible-time `std.div` kInvincibleFlashTime % 2 is 0)
 
+  draw-hud: (graphics) ->
+    return unless @sprite-is-visible!
+    @health-bar-sprite.draw graphics,  kHealthBarX, kHealthBarY
+    @health-fill-sprite.draw graphics, tile-to-game(2.5), tile-to-game(2)
+    @three.draw graphics, tile-to-game(2), tile-to-game(2)
+
+  draw: (graphics) ->
+    return unless @sprite-is-visible!
     #graphics.visualiseRect @damage-collision!, no
     @sprites[@get-sprite-state!].draw graphics, @x, @y
 
