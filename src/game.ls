@@ -17,6 +17,7 @@ require! \./graphics
 Map    = require \./map
 
 { Player }        = require \./player
+{ FirstCaveBat }  = require \./first-cave-bat
 { FixedBackdrop } = require \./backdrop
 
 
@@ -29,6 +30,7 @@ Map    = require \./map
 
 running  = yes
 player   = null
+bat      = null
 map      = null
 last-frame-time  = 0
 any-keys-pressed = no
@@ -125,8 +127,9 @@ draw = ->
 
 # Game::create-test-world
 create-test-world = ->
-  player   := new Player units.tile-to-game(kScreenWidth/2), units.tile-to-game(kScreenHeight/2)
-  map      := Map.create-test-map graphics
+  map    := Map.create-test-map graphics
+  player := new Player graphics, units.tile-to-game(kScreenWidth/2), units.tile-to-game(kScreenHeight/2)
+  bat    := new FirstCaveBat graphics, units.tile-to-game(3), units.tile-to-game(3)
 
 
 # Game::start

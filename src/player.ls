@@ -7,7 +7,6 @@ require! \std
 require! \./units
 require! \./config
 require! \./readout
-require! \./graphics
 
 Sprite         = require \./sprite
 AnimatedSprite = require \./animated-sprite
@@ -69,7 +68,7 @@ export class Player
 
   # Player (Game, Game) - Initial position
 
-  (@x, @y) ->
+  (graphics, @x, @y) ->
 
     # Player state (excluding x and y)
     @velocity-y        = 0
@@ -82,13 +81,13 @@ export class Player
     @interacting       = no
 
     # Sprite management
-    @sprites = @initialise-sprites!
+    @sprites = @initialise-sprites graphics
 
     # Debug
     if config.kDebugMode
       readout.add-reader \spritestate, 'SpriteState'
 
-  initialise-sprite: (motion, hfacing, vfacing) ->
+  initialise-sprite: (graphics, motion, hfacing, vfacing) ->
     tile-x =
       switch motion
       | WALKING     => kWalkFrame
@@ -115,12 +114,12 @@ export class Player
         units.tile-to-px(tile-x), units.tile-to-px(tile-y),
         units.tile-to-px(1), units.tile-to-px(1)
 
-  initialise-sprites: (sprite-map = {}) ->
+  initialise-sprites: (graphics, sprite-map = {}) ->
     for motion in [ STANDING, WALKING, JUMPING, FALLING, INTERACTING ]
       for hfacing in [ LEFT, RIGHT ]
         for vfacing in [ UP, DOWN, HORIZONTAL ]
           sprite-map[ SpriteState.key motion, hfacing, vfacing ] =
-            @initialise-sprite motion, hfacing, vfacing
+            @initialise-sprite graphics, motion, hfacing, vfacing
     return sprite-map
 
   update: (elapsed-time, map) ->
