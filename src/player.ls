@@ -33,7 +33,12 @@ kAirAcceleration     = 0.0003125
 kMaxSpeedX           = 0.15859375
 kMaxSpeedY           = 0.2998046875
 kJumpSpeed           = 0.25
+kShortJumpSpeed      = 0.25 / 1.5
 kJumpGravity         = 0.0003125
+
+# Time constants
+kInvincibleTime      = 3000
+kInvincibleFlashTime = 50
 
 # Collision boxes
 kCollisionX = new Rect 6, 10, 20, 12
@@ -78,6 +83,10 @@ export class Player
     @on-ground         = no
     @jump-active       = no
     @interacting       = no
+    @invincible        = no
+
+    # Timers
+    @invincible-time = 0
 
     # Sprite management
     @sprites = @initialise-sprites graphics
@@ -123,8 +132,14 @@ export class Player
 
   update: (elapsed-time, map) ->
     @sprites[@get-sprite-state!].update elapsed-time
+
+    if @invincible
+      @invincible-time += elapsed-time
+      @invincible = @invincible-time < kInvincibleTime
+
     @update-x elapsed-time, map
     @update-y elapsed-time, map
+
 
   update-x: (elapsed-time, map) ->
     acc-x = if @on-ground then kWalkingAcceleration else kAirAcceleration
@@ -204,8 +219,16 @@ export class Player
           @y = units.tile-to-game(tile.row) - kCollisionY.bottom
           @on-ground = yes
 
+  take-damage: (damage) ->
+    unless @invincible
+      @velocity-y = std.min -kShortJumpSpeed, @velocity-y
+      @invincible = yes
+      @invincible-time = 0
 
   draw: (graphics) ->
+    if @invincible and @invincible-time `std.div` kInvincibleFlashTime % 2 is 0
+      return
+
     #graphics.visualiseRect @damage-collision!, no
     @sprites[@get-sprite-state!].draw graphics, @x, @y
 

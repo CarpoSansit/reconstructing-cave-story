@@ -117,7 +117,12 @@ event-loop = ->
 update = (elapsed-time) ->
   player.update elapsed-time, map
   bat.update elapsed-time, player.x
-  readout.update \collided, bat.damage-collision!.collides-with player.damage-collision!
+
+  if bat.damage-collision!.collides-with player.damage-collision!
+    readout.update \collided, true
+    player.take-damage!
+  else
+    readout.update \collided, false
 
 # Game::draw
 draw = ->
