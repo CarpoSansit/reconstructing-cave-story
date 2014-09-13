@@ -28,12 +28,12 @@ export KEYCODES =
 # Functions
 
 monitor-keys = ->
-  document.add-event-listener \keydown, ({ which }) ->
+  document.add-event-listener \keydown, ({ which }:event) ->
     #std.info which
     queue.push-event { type: KEYDOWN, key: which }
     event.prevent-default!
 
-  document.add-event-listener \keyup, ({ which }) ->
+  document.add-event-listener \keyup, ({ which }:event) ->
     queue.push-event { type: KEYUP, key: which }
     event.prevent-default!
 

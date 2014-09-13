@@ -53,8 +53,8 @@ module.exports = class Surface
       #std.log 'SDL::Surface - Blank surface created'
 
   reset-canvas-size: ->
-    @canvas.width  = @width
-    @canvas.height = @height
+    @canvas.width  = @width  or 100
+    @canvas.height = @height or 100
 
   inherit-size-from-image: (data) ->
     if not @width? and not @height?
@@ -90,11 +90,11 @@ module.exports = class Surface
   draw-box: (rect, color = \black) ->
     @ctx.stroke-style = color
     @ctx.begin-path!
-    @ctx.move-to rect.x, rect.y
-    @ctx.line-to rect.x, rect.y + rect.h
-    @ctx.line-to rect.x + rect.w, rect.y + rect.h
-    @ctx.line-to rect.x + rect.w, rect.y
-    @ctx.line-to rect.x, rect.y
+    @ctx.move-to  0.5 + rect.x,           0.5 + rect.y
+    @ctx.line-to  0.5 + rect.x,          -0.5 + rect.y + rect.h
+    @ctx.line-to -0.5 + rect.x + rect.w, -0.5 + rect.y + rect.h
+    @ctx.line-to -0.5 + rect.x + rect.w,  0.5 + rect.y
+    @ctx.line-to  0.5 + rect.x,           0.5 + rect.y
     @ctx.stroke!
     @ctx.close-path!
 
