@@ -8,11 +8,10 @@ require! \./units
 require! \./config
 require! \./readout
 
-Sprite         = require \./sprite
-AnimatedSprite = require \./animated-sprite
 
-{ WALL_TILE }       = require \./map
-{ Rectangle: Rect } = require \./rectangle
+{ WALL_TILE }              = require \./map
+{ Rectangle: Rect }        = require \./rectangle
+{ Sprite, AnimatedSprite } = require \./sprite
 
 
 # Animation constants
@@ -207,6 +206,7 @@ export class Player
 
 
   draw: (graphics) ->
+    #graphics.visualiseRect @damage-collision!, no
     @sprites[@get-sprite-state!].draw graphics, @x, @y
 
   get-sprite-state: ->
@@ -241,6 +241,10 @@ export class Player
     new Rect @x + kCollisionY.left,
       @y + kCollisionY.top + kCollisionY.h/2 + Δ
       kCollisionY.w, kCollisionY.h/2 + Δ
+
+  damage-collision: ->
+    new Rect @x + kCollisionX.left, @y + kCollisionY.top,
+      kCollisionX.w, kCollisionY.h
 
   on-wall-collision: (map, rect, λ) ->
     for tile in map.get-colliding-tiles rect

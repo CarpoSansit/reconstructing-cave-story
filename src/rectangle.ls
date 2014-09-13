@@ -21,3 +21,10 @@ export class Rectangle
     @right  = @x + @w
     @bottom = @y + @h
 
+  # Rectangle::collides-with (Rectangle)
+  collides-with: (other) ->
+    @right >= other.left and
+      @left <= other.right and
+      @top <= other.bottom and
+      @bottom >= other.top
+

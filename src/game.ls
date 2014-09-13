@@ -19,14 +19,12 @@ Map    = require \./map
 { Player }        = require \./player
 { FirstCaveBat }  = require \./first-cave-bat
 { FixedBackdrop } = require \./backdrop
+{ Rectangle }     = require \./rectangle
 
 
 # Reference constants
 
 { kScreenWidth, kScreenHeight, kFps, kMaxFrameTime, kDebugMode } = config
-
-std.log units.tile-to-game(kScreenHeight/2)
-
 
 
 # State
@@ -119,7 +117,7 @@ event-loop = ->
 update = (elapsed-time) ->
   player.update elapsed-time, map
   bat.update elapsed-time, player.x
-  map.update elapsed-time
+  readout.update \collided, bat.damage-collision!.collides-with player.damage-collision!
 
 # Game::draw
 draw = ->
@@ -128,13 +126,13 @@ draw = ->
   bat.draw graphics
   player.draw graphics
   map.draw graphics
-  # no graphics.flip required
+  # No graphics.flip required
 
 # Game::create-test-world
 create-test-world = ->
   map    := Map.create-test-map graphics
   player := new Player graphics, units.tile-to-game(kScreenWidth/2), units.tile-to-game(kScreenHeight/2)
-  bat    := new FirstCaveBat graphics, units.tile-to-game(6), units.tile-to-game(7)
+  bat    := new FirstCaveBat graphics, units.tile-to-game(7), units.tile-to-game(8)
 
 
 # Game::start
@@ -144,6 +142,7 @@ export start = ->
   readout.add-reader \frametime, 'Frame time'
   readout.add-reader \drawtime, 'Draw time'
   readout.add-reader \willstop, 'Will stop', true
+  readout.add-reader \collided, 'Collision?', false
 
   # Create game world
   create-test-world!

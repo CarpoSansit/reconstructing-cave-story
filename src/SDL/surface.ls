@@ -53,8 +53,8 @@ module.exports = class Surface
       #std.log 'SDL::Surface - Blank surface created'
 
   reset-canvas-size: ->
-    @canvas.width  = @width  or 100
-    @canvas.height = @height or 100
+    @canvas.width  = @width
+    @canvas.height = @height
 
   inherit-size-from-image: (data) ->
     if not @width? and not @height?
@@ -105,7 +105,6 @@ module.exports = class Surface
     surface.set-color-key color
 
   @blit-surface = (source, src-rect, dest, dest-rect) ->
-    #std.log 'blit:', src-rect, dest-rect
     if src-rect
       dest.ctx.draw-image source.canvas,
         src-rect.x,  src-rect.y,  src-rect.w,  src-rect.h,

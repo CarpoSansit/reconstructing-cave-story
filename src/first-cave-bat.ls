@@ -6,16 +6,18 @@
 require! \std
 require! \./units
 
-{ tile-to-px } = units
+{ tile-to-px, tile-to-game } = units
 
-AnimatedSprite = require \./animated-sprite
+{ Rectangle: Rect }        = require \./rectangle
+{ Sprite, AnimatedSprite } = require \./sprite
 
 
 # Reference constants
 
-TILE_PX = tile-to-px 1
-RIGHT   = "R"
-LEFT    = "L"
+TILE_PX   = tile-to-px 1
+TILE_GAME = tile-to-game 1
+RIGHT     = "R"
+LEFT      = "L"
 
 kAngularVelocity = 120/1000  # degrees/second
 kFlyFps          = 15
@@ -35,12 +37,12 @@ class SpriteState
 export class FirstCaveBat
 
   # FirstCaveBat (Game, Game)
-  (graphics, @x, @y) ->
-    std.log 'new Bat:', @x, @y
+  (graphics, @x, @center-y) ->
     @flight-angle = 0
     @angular-velocity = kAngularVelocity
     @horizontal-facing = RIGHT
     @sprites = @initialise-sprites graphics
+    @y = @center-y
 
   get-sprite-state: ->
     SpriteState.key @horizontal-facing
@@ -59,9 +61,13 @@ export class FirstCaveBat
   update: (elapsed-time, player-x) ->
     @horizontal-facing = if player-x < @x then LEFT else RIGHT
     @flight-angle += @angular-velocity * elapsed-time
+    @y = @center-y + units.tile-to-game(5) / 2 * std.sin units.deg-to-rad @flight-angle
     @sprites[@get-sprite-state!].update elapsed-time
 
   draw: (graphics) ->
-    y = @y + units.tile-to-game(5) / 2 * std.sin units.deg-to-rad @flight-angle
-    @sprites[@get-sprite-state!].draw graphics, @x, y
+    #graphics.visualiseRect @damage-collision!, yes
+    @sprites[@get-sprite-state!].draw graphics, @x, @y
+
+  damage-collision: ->
+    new Rect @x + tile-to-game(0.5), @y + tile-to-game(0.5), 1, 1
 

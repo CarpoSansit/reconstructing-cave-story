@@ -6,10 +6,10 @@ require! \./units
 
 { div } = std
 
-Sprite = require \./sprite
 
+{ Sprite }          = require \./sprite
+{ FixedBackdrop }   = require \./backdrop
 { Rectangle: Rect } = require \./rectangle
-{ FixedBackdrop } = require \./backdrop
 
 
 # Constants
