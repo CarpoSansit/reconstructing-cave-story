@@ -26,6 +26,8 @@ export floor = Math.floor
 export abs   = Math.abs
 export max   = Math.max
 export min   = Math.min
+export sin   = Math.sin
+
 
 # Export
 

@@ -2,7 +2,7 @@
 # Game
 #
 # Singleton. The contents of this file are equivalent to the contents of a
-# class constructor. We simply delare all functions, and then make pulic the
+# class constructor. We simply delare all functions, and then make public the
 # ones we want via `exports`
 
 require! \std
@@ -24,6 +24,9 @@ Map    = require \./map
 # Reference constants
 
 { kScreenWidth, kScreenHeight, kFps, kMaxFrameTime, kDebugMode } = config
+
+std.log units.tile-to-game(kScreenHeight/2)
+
 
 
 # State
@@ -115,12 +118,14 @@ event-loop = ->
 # Game::update
 update = (elapsed-time) ->
   player.update elapsed-time, map
+  bat.update elapsed-time, player.x
   map.update elapsed-time
 
 # Game::draw
 draw = ->
   graphics.clear!
   map.draw-background graphics
+  bat.draw graphics
   player.draw graphics
   map.draw graphics
   # no graphics.flip required
@@ -129,7 +134,7 @@ draw = ->
 create-test-world = ->
   map    := Map.create-test-map graphics
   player := new Player graphics, units.tile-to-game(kScreenWidth/2), units.tile-to-game(kScreenHeight/2)
-  bat    := new FirstCaveBat graphics, units.tile-to-game(3), units.tile-to-game(3)
+  bat    := new FirstCaveBat graphics, units.tile-to-game(6), units.tile-to-game(7)
 
 
 # Game::start
@@ -146,10 +151,12 @@ export start = ->
   # Begin game loop
   event-loop!
 
+  player.start-moving-left!
+
   # TESTING: Don't let the game loop run too long
   std.delay 5000, ->
     if !any-keys-pressed
-      running := no
+      void#running := no
     else
       std.log "Game being interacted with. Don't shut down"
 

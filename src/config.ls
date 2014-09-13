@@ -22,3 +22,5 @@ export kMaxFrameTime = 5 * 1000 / kFps
 
 export kDebugMode = on
 
+export kGraphicsQuality = 16
+

@@ -36,7 +36,7 @@ kMaxSpeedY           = 0.2998046875
 kJumpSpeed           = 0.25
 kJumpGravity         = 0.0003125
 
-# Collision spaces
+# Collision boxes
 kCollisionX = new Rect 6, 10, 20, 12
 kCollisionY = new Rect 10, 2, 12, 30
 
@@ -50,7 +50,7 @@ kCollisionY = new Rect 10, 2, 12, 30
 
 # Private class: SpriteState
 
-export class SpriteState
+class SpriteState
   ( @motion-type       = STANDING,
     @horizontal-facing = LEFT,
     @vertical-facing   = HORIZONTAL ) ->

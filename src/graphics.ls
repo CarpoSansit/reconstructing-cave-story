@@ -3,7 +3,7 @@
 # Graphics
 #
 # Singleton. The contents of this file are equivalent to the contents of a
-# class constructor. We simply delare all functions, and then make pulic the
+# class constructor. We simply delare all functions, and then make public the
 # ones we want via `exports`
 #
 
@@ -16,13 +16,19 @@ require! \./units
 # Reference constants
 
 { kScreenWidth, kScreenHeight } = config
-kTransparentColor = [ 0, 0, 0 ]
+
+kTransparentColor  = [ 0, 0, 0 ]
+kScreenScaleFactor = 2
 
 
 # State
 
-screen = SDL.set-video-mode units.tile-to-px(kScreenWidth), units.tile-to-px(kScreenHeight), 2
 spritesheets = {}
+
+screen = SDL.set-video-mode(
+  units.tile-to-px(kScreenWidth),
+  units.tile-to-px(kScreenHeight),
+  kScreenScaleFactor)
 
 
 # Functions

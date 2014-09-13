@@ -6,13 +6,16 @@
 require! \std
 require! \./config
 
-# TODO: Don't
-kTileSize = 32
+kPi = Math.PI
+
+kGameUnitsPerTile = 32
+kPixelScaleFactor = kGameUnitsPerTile / config.kGraphicsQuality
 
 # Spacial
-export Game  = std.id               # Intrinsic units of position.
-export Pixel = std.floor            # Discrete
-export Tile  = std.abs . std.floor  # Discrete, non-negative
+export Game    = std.id               # Intrinsic units of position.
+export Pixel   = std.floor            # Discrete
+export Tile    = std.abs . std.floor  # Discrete, non-negative
+export Degrees = std.id               # Circular
 
 # Time
 export FPS = std.id  # Hertz
@@ -25,9 +28,9 @@ export Acceleration = std.id  # game / ms / ms
 
 # Conversion utils
 
-# TODO: Quit assuming 16x16
-export game-to-px   = Pixel . (/ 2)
-export game-to-tile = Tile . (/ kTileSize)
-export tile-to-game = (* kTileSize)
+export game-to-px   = Pixel . (/ kPixelScaleFactor)
+export game-to-tile = Tile . (/ kGameUnitsPerTile)
+export tile-to-game = (* kGameUnitsPerTile)
 export tile-to-px   = game-to-px . tile-to-game
+export deg-to-rad   = (* kPi / 180)
 
