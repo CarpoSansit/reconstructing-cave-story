@@ -9,7 +9,7 @@ require! \SDL
 
 # Const
 
-kBackgroundSize = kTileSize * 4
+kBackgroundSize = 4 * 16 # kTileSize # Again, circular module loading
 
 
 

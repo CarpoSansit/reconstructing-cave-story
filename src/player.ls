@@ -14,7 +14,7 @@ AnimatedSprite = require \./animated-sprite
 
 # Animation constants
 kSpriteFrameTime     = 15
-kCharacterFrame      = 20
+kCharacterFrame      = 0
 kWalkFrame           = 0
 kStandFrame          = 0
 kJumpFrame           = 1
@@ -34,8 +34,10 @@ kJumpSpeed           = 0.25
 kJumpGravity         = 0.0003125
 
 # Collision spaces
-kCollisionX = new Rect 6, 10, 20, 12
-kCollisionY = new Rect 10, 2, 12, 30
+# Because we don't have macros, I created this 5th multiplier argument instead
+# TODO: Put the tilesize somewhere outside of Game so everyone can reference it
+kCollisionX = new Rect 6, 10, 20, 12, 16 / 32
+kCollisionY = new Rect 10, 2, 12, 30, 16 / 32
 
 # Enumerated constants
 [ STANDING, WALKING, JUMPING, FALLING, INTERACTING ] = <[ S W J F I ]>
@@ -98,14 +100,14 @@ module.exports = class Player
         (kCharacterFrame + 1) * Game.kTileSize
 
     if motion is WALKING
-      new AnimatedSprite graphics, 'content/MyChar.bmp',
+      new AnimatedSprite graphics, 'data/16x16/MyChar.bmp',
         source-x, source-y, Game.kTileSize, Game.kTileSize,
         kSpriteFrameTime, 3
     else
       if vfacing is DOWN and (motion is JUMPING or motion is FALLING)
         source-x = kDownFrame * Game.kTileSize
 
-      new Sprite graphics, 'content/MyChar.bmp',
+      new Sprite graphics, 'data/16x16/MyChar.bmp',
         source-x, source-y, Game.kTileSize, Game.kTileSize
 
   initialise-sprites: (sprite-map = {}) ->

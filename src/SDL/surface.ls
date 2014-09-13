@@ -39,6 +39,10 @@ module.exports = class Surface
 
     @reset-canvas-size!
 
+    # Show unloaded surfaces as red
+    @ctx.fill-style = \red
+    @ctx.fill-rect 0, 0, @width, @height
+
     if typeof src is \string
       #std.log 'SDL::Surface - src unloaded. Loading...', src
       @load-image-data src
@@ -64,6 +68,9 @@ module.exports = class Surface
       #std.log 'SDL::Surface::loadImageData - asset ready:', path
       @inherit-size-from-image data
       @save-image-data data
+    data.onerror = ~>
+      std.log "Cant load:", path
+      @ctx.fill-rect 0, 0, @width, @height
     data.src = path
 
   save-image-data: (data) ->
@@ -91,3 +98,4 @@ module.exports = class Surface
     else
       dest.ctx.draw-image source.canvas,
         dest-rect.x, dest-rect.y, dest-rect.w, dest-rect.h
+

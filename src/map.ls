@@ -74,7 +74,7 @@ module.exports = class Map
     map = new Map
 
     # Create imple backdrop
-    map.backdrop = new FixedBackdrop 'content/bkBlue.bmp', graphics
+    map.backdrop = new FixedBackdrop 'data/16x16/bkBlue.bmp', graphics
 
     # Create tile layout
     num-rows = 15
@@ -82,7 +82,7 @@ module.exports = class Map
     row = 11
 
     # Basic block
-    tile = new Tile WALL_TILE, new Sprite graphics, 'content/PrtCave.bmp',
+    tile = new Tile WALL_TILE, new Sprite graphics, 'data/16x16/Stage/PrtCave.bmp',
       Game.kTileSize, 0,
       Game.kTileSize, Game.kTileSize
 
@@ -98,9 +98,9 @@ module.exports = class Map
     map.tiles[10][3] = tile
 
     # Background tiles
-    chain-top = new Sprite graphics, 'content/PrtCave.bmp', 11 * Game.kTileSize, 2 * Game.kTileSize, Game.kTileSize, Game.kTileSize
-    chain-mid = new Sprite graphics, 'content/PrtCave.bmp', 12 * Game.kTileSize, 2 * Game.kTileSize, Game.kTileSize, Game.kTileSize
-    chain-btm = new Sprite graphics, 'content/PrtCave.bmp', 13 * Game.kTileSize, 2 * Game.kTileSize, Game.kTileSize, Game.kTileSize
+    chain-top = new Sprite graphics, 'data/16x16/Stage/PrtCave.bmp', 11 * Game.kTileSize, 2 * Game.kTileSize, Game.kTileSize, Game.kTileSize
+    chain-mid = new Sprite graphics, 'data/16x16/Stage/PrtCave.bmp', 12 * Game.kTileSize, 2 * Game.kTileSize, Game.kTileSize, Game.kTileSize
+    chain-btm = new Sprite graphics, 'data/16x16/Stage/PrtCave.bmp', 13 * Game.kTileSize, 2 * Game.kTileSize, Game.kTileSize, Game.kTileSize
 
     map.bg-tiles[8][2] = chain-top
     map.bg-tiles[9][2] = chain-mid

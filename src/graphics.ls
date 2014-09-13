@@ -9,8 +9,9 @@ Game = require \./game
 
 # Reference constants
 
-kScreenWidth      = 640
-kScreenHeight     = 480
+# TODO: Move config. This doesn't work cos Game isn't done when we require this
+kScreenWidth      = 320 # Game.kScreenWidth
+kScreenHeight     = 240 # Game.kScreenHeight
 kTransparentColor = [ 0, 0, 0 ]
 
 
