@@ -21,9 +21,7 @@ kTransparentColor = [ 0, 0, 0 ]
 
 # State
 
-screen = SDL.set-video-mode units.tile-to-px(kScreenWidth), units.tile-to-px(kScreenHeight), SDL.FULLSCREEN
-console.log kScreenWidth
-console.log units.tile-to-px kScreenWidth
+screen = SDL.set-video-mode units.tile-to-px(kScreenWidth), units.tile-to-px(kScreenHeight), 2
 spritesheets = {}
 
 
