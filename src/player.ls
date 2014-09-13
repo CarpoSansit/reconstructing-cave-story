@@ -1,27 +1,31 @@
 
-# Require
+#
+# Player
+#
 
 require! \std
-require! \./graphics
+require! \./units
+require! \./config
 require! \./readout
+require! \./graphics
 
-Game           = require \./game
-Map            = require \./map
-Rect           = require \./rectangle
 Sprite         = require \./sprite
 AnimatedSprite = require \./animated-sprite
 
+{ WALL_TILE }       = require \./map
+{ Rectangle: Rect } = require \./rectangle
+
 
 # Animation constants
-kSpriteFrameTime     = 15
-kCharacterFrame      = 0
-kWalkFrame           = 0
-kStandFrame          = 0
-kJumpFrame           = 1
-kFallFrame           = 2
-kUpFrameOffset       = 3
-kDownFrame           = 6
-kBackFrame           = 7
+kCharacterFrame = 0
+kWalkFrame      = 0
+kStandFrame     = 0
+kJumpFrame      = 1
+kFallFrame      = 2
+kUpFrameOffset  = 3
+kDownFrame      = 6
+kBackFrame      = 7
+kWalkFps        = 15
 
 # Physics constants
 kFriction            = 0.00049804687
@@ -34,12 +38,12 @@ kJumpSpeed           = 0.25
 kJumpGravity         = 0.0003125
 
 # Collision spaces
-# Because we don't have macros, I created this 5th multiplier argument instead
-# TODO: Put the tilesize somewhere outside of Game so everyone can reference it
-kCollisionX = new Rect 6, 10, 20, 12, 16 / 32
-kCollisionY = new Rect 10, 2, 12, 30, 16 / 32
+kCollisionX = new Rect 6, 10, 20, 12
+kCollisionY = new Rect 10, 2, 12, 30
 
-# Enumerated constants
+# For these, I'm using strings instead of numbers because it makes
+# the debug readout much easier to understand. If this has performance
+# implications later on I'll put it back.
 [ STANDING, WALKING, JUMPING, FALLING, INTERACTING ] = <[ S W J F I ]>
 [ LEFT, RIGHT ] = <[ L R ]>
 [ UP, DOWN, HORIZONTAL ] = <[ U D H ]>
@@ -47,7 +51,7 @@ kCollisionY = new Rect 10, 2, 12, 30, 16 / 32
 
 # Private class: SpriteState
 
-class SpriteState
+export class SpriteState
   ( @motion-type       = STANDING,
     @horizontal-facing = LEFT,
     @vertical-facing   = HORIZONTAL ) ->
@@ -60,7 +64,10 @@ class SpriteState
 
 
 # Player class
-module.exports = class Player
+
+export class Player
+
+  # Player (Game, Game) - Initial position
 
   (@x, @y) ->
 
@@ -78,37 +85,35 @@ module.exports = class Player
     @sprites = @initialise-sprites!
 
     # Debug
-    if Game.kDebugMode
+    if config.kDebugMode
       readout.add-reader \spritestate, 'SpriteState'
 
   initialise-sprite: (motion, hfacing, vfacing) ->
-    source-x =
+    tile-x =
       switch motion
-      | WALKING     => kWalkFrame  * Game.kTileSize
-      | STANDING    => kStandFrame * Game.kTileSize
-      | JUMPING     => kJumpFrame  * Game.kTileSize
-      | FALLING     => kFallFrame  * Game.kTileSize
-      | INTERACTING => kBackFrame  * Game.kTileSize
+      | WALKING     => kWalkFrame
+      | STANDING    => kStandFrame
+      | JUMPING     => kJumpFrame
+      | FALLING     => kFallFrame
+      | INTERACTING => kBackFrame
       | _ => void
 
-    source-x += if vfacing is UP then kUpFrameOffset * Game.kTileSize else 0
+    tile-x += if vfacing is UP then kUpFrameOffset else 0
 
-    source-y =
-      if hfacing is LEFT
-        kCharacterFrame * Game.kTileSize
-      else
-        (kCharacterFrame + 1) * Game.kTileSize
+    tile-y = kCharacterFrame + if hfacing is LEFT then 0 else 1
 
     if motion is WALKING
       new AnimatedSprite graphics, 'data/16x16/MyChar.bmp',
-        source-x, source-y, Game.kTileSize, Game.kTileSize,
-        kSpriteFrameTime, 3
+        units.tile-to-px(tile-x), units.tile-to-px(tile-y),
+        units.tile-to-px(1), units.tile-to-px(1),
+        kWalkFps, 3
     else
       if vfacing is DOWN and (motion is JUMPING or motion is FALLING)
-        source-x = kDownFrame * Game.kTileSize
+        source-x = kDownFrame
 
       new Sprite graphics, 'data/16x16/MyChar.bmp',
-        source-x, source-y, Game.kTileSize, Game.kTileSize
+        units.tile-to-px(tile-x), units.tile-to-px(tile-y),
+        units.tile-to-px(1), units.tile-to-px(1)
 
   initialise-sprites: (sprite-map = {}) ->
     for motion in [ STANDING, WALKING, JUMPING, FALLING, INTERACTING ]
@@ -138,44 +143,44 @@ module.exports = class Player
         else
           std.min 0, @velocity-x + kFriction * elapsed-time
 
-    Δx = std.round @velocity-x * elapsed-time
+    Δx = @velocity-x * elapsed-time
 
     if Δx > 0
       @on-wall-collision map, (@right-collision Δx), (tile) ->
         if tile
-          @x = tile.col * Game.kTileSize - kCollisionX.right
+          @x = units.tile-to-game(tile.col) - kCollisionX.right
           @velocity-x = 0
         else
           @x += Δx
 
       @on-wall-collision map, (@left-collision 0), (tile) ->
         if tile
-          @x = tile.col * Game.kTileSize + kCollisionX.right
+          @x = units.tile-to-game(tile.col) + kCollisionX.right
 
     else
       @on-wall-collision map, (@left-collision Δx), (tile) ->
         if tile
-          @x = tile.col * Game.kTileSize + kCollisionX.right
+          @x = units.tile-to-game(tile.col) + kCollisionX.right
           @velocity-x = 0
         else
           @x += Δx
 
       @on-wall-collision map, (@right-collision 0), (tile) ->
         if tile
-          @x = tile.col * Game.kTileSize - kCollisionX.right
+          @x = units.tile-to-game(tile.col) - kCollisionX.right
 
 
   update-y: (elapsed-time, map) ->
     gravity = if @jump-active and @velocity-y < 0 then kJumpGravity else kGravity
     @velocity-y = std.min @velocity-y + gravity * elapsed-time, kMaxSpeedY
 
-    Δy = std.round @velocity-y * elapsed-time
+    Δy = @velocity-y * elapsed-time
 
     # Falling
     if Δy > 0
       @on-wall-collision map, (@bottom-collision Δy), (tile) ->
         if tile
-          @y = tile.row * Game.kTileSize - kCollisionY.bottom
+          @y = units.tile-to-game(tile.row) - kCollisionY.bottom
           @velocity-y = 0
           @on-ground = yes
         else
@@ -184,13 +189,13 @@ module.exports = class Player
 
       @on-wall-collision map, (@top-collision 0), (tile) ->
         if tile
-          @y = tile.row * Game.kTileSize + kCollisionY.h
+          @y = units.tile-to-game(tile.row) + kCollisionY.h
 
     # Jumping
     else
       @on-wall-collision map, (@top-collision Δy), (tile) ->
         if tile
-          @y = tile.row * Game.kTileSize + kCollisionY.h
+          @y = units.tile-to-game(tile.row) + kCollisionY.h
           @velocity-y = 0
         else
           @y += Δy
@@ -198,7 +203,7 @@ module.exports = class Player
 
       @on-wall-collision map, (@bottom-collision 0), (tile) ->
         if tile
-          @y = tile.row * Game.kTileSize - kCollisionY.bottom
+          @y = units.tile-to-game(tile.row) - kCollisionY.bottom
           @on-ground = yes
 
 
@@ -240,7 +245,7 @@ module.exports = class Player
 
   on-wall-collision: (map, rect, λ) ->
     for tile in map.get-colliding-tiles rect
-      if tile.type is Map.WALL_TILE
+      if tile.type is WALL_TILE
         return λ.call this, tile
     λ.call this
 

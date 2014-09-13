@@ -1,8 +1,16 @@
 
+#
+# Rectangle
+#
+
+# No dependencies
+
+
 # Rectangle Class
 
-module.exports = class Rectangle
+export class Rectangle
 
+  # Rectangle (Game, Game, Game, Game, ?Number)
   (x, y, w, h, m = 1) ->
     @x      = x * m
     @y      = y * m

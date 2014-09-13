@@ -1,46 +1,47 @@
 
-# Graphics Class
+#
+# Graphics
+#
+# Singleton. The contents of this file are equivalent to the contents of a
+# class constructor. We simply delare all functions, and then make pulic the
+# ones we want via `exports`
+#
 
 require! \std
 require! \SDL
-
-Game = require \./game
+require! \./config
+require! \./units
 
 
 # Reference constants
 
-# TODO: Move config. This doesn't work cos Game isn't done when we require this
-kScreenWidth      = 320 # Game.kScreenWidth
-kScreenHeight     = 240 # Game.kScreenHeight
+{ kScreenWidth, kScreenHeight } = config
 kTransparentColor = [ 0, 0, 0 ]
 
 
-# Internal state
+# State
 
-screen = SDL.set-video-mode kScreenWidth, kScreenHeight, SDL.FULLSCREEN
+screen = SDL.set-video-mode units.tile-to-px(kScreenWidth), units.tile-to-px(kScreenHeight), SDL.FULLSCREEN
+console.log kScreenWidth
+console.log units.tile-to-px kScreenWidth
 spritesheets = {}
 
 
 # Functions
 
+# Graphics::load-image (String, ?Bool)
 export load-image = (path, use-transparency = no) ->
   if not spritesheets[path]?
-    std.log 'Graphics::loadImage - no surface for', path, '- creating new surface'
-    spritesheets[path] = new SDL.Surface path
-    if use-transparency
-      SDL.set-color-key spritesheets[path], kTransparentColor
-
-    if Game.kDebugMode
-      document.body.append-child spritesheets[path].canvas
-
-  else
-    std.log 'Graphics::loadImage - reusing available surface for', path
-
+    spritesheets[path] = SDL.load-image path
+    if use-transparency then SDL.set-color-key spritesheets[path], kTransparentColor
+    if config.kDebugMode then document.body.append-child spritesheets[path].canvas
   return spritesheets[path]
 
+# Graphics::blit-surface (SDL::Surface, SDL::Rect, SDL::Rect)
 export blit-surface = (source, src-rect, dest-rect) ->
   SDL.blit-surface source, src-rect, screen, dest-rect
 
+# Graphics::clear
 export clear = ->
   screen.clear!
 

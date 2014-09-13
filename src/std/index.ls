@@ -22,6 +22,8 @@ export flip  = (λ) -> (a, b) --> λ b, a
 export delay = flip set-timeout
 
 export round = Math.round
+export floor = Math.floor
+export abs   = Math.abs
 export max   = Math.max
 export min   = Math.min
 

@@ -1,36 +1,31 @@
 
-# Game Class
-
-# Require
+# Game
+#
+# Singleton. The contents of this file are equivalent to the contents of a
+# class constructor. We simply delare all functions, and then make pulic the
+# ones we want via `exports`
 
 require! \std
 require! \SDL
 
 require! \./input
-require! \./graphics
+require! \./units
+require! \./config
 require! \./readout
+require! \./graphics
 
-Player = require \./player
 Map    = require \./map
+
+{ Player }        = require \./player
 { FixedBackdrop } = require \./backdrop
 
 
 # Reference constants
 
-export kDebugMode    = on
-
-export kFps          = 60
-export kTileSize     = 16
-export kScreenWidth  = 320
-export kScreenHeight = 240
+{ kScreenWidth, kScreenHeight, kFps, kDebugMode } = config
 
 
-# Game singleton
-
-std.log "Game - new Game"
-
-
-# Internal state
+# State
 
 running  = yes
 player   = null
@@ -41,10 +36,9 @@ any-keys-pressed = no
 
 # Functions
 
+# Game::event-loop
+# Obviously JS has an event loop but I want to emulate RCS style where possible
 event-loop = ->
-
-  # Obviously JS has an event loop but I want to emulate RCS style where possible
-
   start-time = SDL.get-ticks!
   input.begin-new-frame!
 
@@ -58,9 +52,7 @@ event-loop = ->
     | otherwise   => throw new Error message: "Unknown event type: " + event
 
 
-  #
   # Interrogate key state
-  #
 
   # Escape to quit
   if input.was-key-pressed SDL.KEY.ESCAPE
@@ -95,22 +87,30 @@ event-loop = ->
   # Update and draw world
   Δt = SDL.get-ticks! - last-frame-time
   update Δt
-  readout.update \fps std.round 1000 / Δt
   draw!
 
   # Queue next frame
   if running
     last-frame-time := SDL.get-ticks!
     elapsed-time = last-frame-time - start-time
+
+    # Update debug info
+    readout.update \frametime, std.floor 1000 / Δt
     readout.update \drawtime, elapsed-time
+
+    # This isn't even slightly similar to SDL_Delay but I've called it the
+    # same and put it in SDL Mock for consistency with Chris' codebase.
     SDL.delay 1000ms / kFps - elapsed-time, event-loop
+
   else
     std.log 'Game stopped.'
 
+# Game::update
 update = (elapsed-time) ->
   player.update elapsed-time, map
   map.update elapsed-time
 
+# Game::draw
 draw = ->
   graphics.clear!
   map.draw-background graphics
@@ -118,19 +118,21 @@ draw = ->
   map.draw graphics
   # no graphics.flip required
 
+# Game::create-test-world
 create-test-world = ->
-  player   := new Player kScreenWidth/2, kScreenHeight/2
+  player   := new Player units.tile-to-game(kScreenWidth/2), units.tile-to-game(kScreenHeight/2)
   map      := Map.create-test-map graphics
 
 
+# Game::start
 export start = ->
   SDL.init(SDL.INIT_EVERYTHING);
 
-  readout.add-reader \fps, 'FPS'
+  readout.add-reader \frametime, 'Frame time'
   readout.add-reader \drawtime, 'Draw time'
   readout.add-reader \willstop, 'Will stop', true
-  readout.add-reader \debug, 'Debug mode', kDebugMode
 
+  # Create game world
   create-test-world!
 
   # Begin game loop

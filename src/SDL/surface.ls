@@ -99,3 +99,6 @@ module.exports = class Surface
       dest.ctx.draw-image source.canvas,
         dest-rect.x, dest-rect.y, dest-rect.w, dest-rect.h
 
+  @load-image = (path) ->
+    new Surface path
+

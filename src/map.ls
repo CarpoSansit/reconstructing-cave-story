@@ -2,13 +2,13 @@
 # Require
 
 require! \std
+require! \./units
 
 { div } = std
 
-Game   = require \./game
-Rect   = require \./rectangle
 Sprite = require \./sprite
 
+{ Rectangle: Rect } = require \./rectangle
 { FixedBackdrop } = require \./backdrop
 
 
@@ -46,20 +46,20 @@ module.exports = class Map
   draw: (graphics) ->
     for row, y in @tiles
       for tile, x in row
-        tile.sprite?.draw graphics, x * Game.kTileSize, y * Game.kTileSize
+        tile.sprite?.draw graphics, units.tile-to-game(x), units.tile-to-game(y)
 
   draw-background: (graphics) ->
     @backdrop.draw graphics
 
     for row, y in @bg-tiles
       for sprite, x in row
-        sprite?.draw graphics, x * Game.kTileSize, y * Game.kTileSize
+        sprite?.draw graphics, units.tile-to-game(x), units.tile-to-game(y)
 
   get-colliding-tiles: (rect) ->
-    first-row = rect.top    `div` Game.kTileSize
-    last-row  = rect.bottom `div` Game.kTileSize
-    first-col = rect.left   `div` Game.kTileSize
-    last-col  = rect.right  `div` Game.kTileSize
+    first-row = units.game-to-px(rect.top)    `div` units.tile-to-px(1)
+    last-row  = units.game-to-px(rect.bottom) `div` units.tile-to-px(1)
+    first-col = units.game-to-px(rect.left)   `div` units.tile-to-px(1)
+    last-col  = units.game-to-px(rect.right)  `div` units.tile-to-px(1)
     collision-tiles = []
 
     for row from first-row to last-row
@@ -83,8 +83,8 @@ module.exports = class Map
 
     # Basic block
     tile = new Tile WALL_TILE, new Sprite graphics, 'data/16x16/Stage/PrtCave.bmp',
-      Game.kTileSize, 0,
-      Game.kTileSize, Game.kTileSize
+      units.tile-to-px(1), 0,
+      units.tile-to-px(1), units.tile-to-px(1)
 
     # Floor
     for col from 0 to num-cols
@@ -98,9 +98,9 @@ module.exports = class Map
     map.tiles[10][3] = tile
 
     # Background tiles
-    chain-top = new Sprite graphics, 'data/16x16/Stage/PrtCave.bmp', 11 * Game.kTileSize, 2 * Game.kTileSize, Game.kTileSize, Game.kTileSize
-    chain-mid = new Sprite graphics, 'data/16x16/Stage/PrtCave.bmp', 12 * Game.kTileSize, 2 * Game.kTileSize, Game.kTileSize, Game.kTileSize
-    chain-btm = new Sprite graphics, 'data/16x16/Stage/PrtCave.bmp', 13 * Game.kTileSize, 2 * Game.kTileSize, Game.kTileSize, Game.kTileSize
+    chain-top = new Sprite graphics, 'data/16x16/Stage/PrtCave.bmp', units.tile-to-px(11), units.tile-to-px(2), units.tile-to-px(1), units.tile-to-px(1)
+    chain-mid = new Sprite graphics, 'data/16x16/Stage/PrtCave.bmp', units.tile-to-px(12), units.tile-to-px(2), units.tile-to-px(1), units.tile-to-px(1)
+    chain-btm = new Sprite graphics, 'data/16x16/Stage/PrtCave.bmp', units.tile-to-px(13), units.tile-to-px(2), units.tile-to-px(1), units.tile-to-px(1)
 
     map.bg-tiles[8][2] = chain-top
     map.bg-tiles[9][2] = chain-mid
