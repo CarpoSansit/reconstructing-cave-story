@@ -83,6 +83,21 @@ module.exports = class Surface
     @color-key = color
     if @ready then @save-image-data @data
 
+  draw-rect: (rect, color = \black) ->
+    @ctx.fill-style = color
+    @ctx.fill-rect rect.x, rect.y, rect.w, rect.h
+
+  draw-box: (rect, color = \black) ->
+    @ctx.stroke-style = color
+    @ctx.begin-path!
+    @ctx.move-to rect.x, rect.y
+    @ctx.line-to rect.x, rect.y + rect.h
+    @ctx.line-to rect.x + rect.w, rect.y + rect.h
+    @ctx.line-to rect.x + rect.w, rect.y
+    @ctx.line-to rect.x, rect.y
+    @ctx.stroke!
+    @ctx.close-path!
+
   clear: ->
     @ctx.clear-rect 0, 0, @width, @height
 

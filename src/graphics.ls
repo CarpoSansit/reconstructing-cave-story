@@ -45,6 +45,19 @@ export load-image = (path, use-transparency = no) ->
 export blit-surface = (source, src-rect, dest-rect) ->
   SDL.blit-surface source, src-rect, screen, dest-rect
 
+# Graphics::visualiseRect (Rect)
+export visualiseRect = (rect, fill) ->
+
+  # translate between game Rect and SDL Rect
+  paint-rect = new SDL.Rect units.game-to-px(rect.left), units.game-to-px(rect.top),
+    units.game-to-px(rect.w), units.game-to-px(rect.h)
+
+  if fill
+    screen.draw-rect paint-rect, \red
+  else
+    screen.draw-box paint-rect, \red
+
+
 # Graphics::clear
 export clear = ->
   screen.clear!
