@@ -7,7 +7,7 @@ Game = require \./game
 module.exports = class Sprite
   (graphics, path, source-x, source-y, @width, @height) ->
     @source-rect  = new SDL.Rect source-x, source-y, width, height
-    @sprite-sheet = graphics.load-image path
+    @sprite-sheet = graphics.load-image path, true
 
   update: ->
 

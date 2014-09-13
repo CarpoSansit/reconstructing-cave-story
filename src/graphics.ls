@@ -9,8 +9,9 @@ Game = require \./game
 
 # Reference constants
 
-kScreenWidth  = 640
-kScreenHeight = 480
+kScreenWidth      = 640
+kScreenHeight     = 480
+kTransparentColor = [ 0, 0, 0 ]
 
 
 # Internal state
@@ -21,16 +22,19 @@ spritesheets = {}
 
 # Functions
 
-export load-image = (path) ->
+export load-image = (path, use-transparency = no) ->
   if not spritesheets[path]?
     std.log 'Graphics::loadImage - no surface for', path, '- creating new surface'
     spritesheets[path] = new SDL.Surface path
+    if use-transparency
+      SDL.set-color-key spritesheets[path], kTransparentColor
 
     if Game.kDebugMode
       document.body.append-child spritesheets[path].canvas
 
   else
     std.log 'Graphics::loadImage - reusing available surface for', path
+
   return spritesheets[path]
 
 export blit-surface = (source, src-rect, dest-rect) ->

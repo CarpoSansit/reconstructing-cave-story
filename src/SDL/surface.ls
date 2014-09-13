@@ -6,14 +6,36 @@ require! \std
 Rect = require \./rect
 
 
+# Helpers
+
+make-transparent = (data, color) ->
+  canvas = document.create-element \canvas
+  canvas.width = data.width
+  canvas.height = data.height
+
+  context = canvas.get-context \2d
+  context.draw-image data, 0, 0
+  pixels = context.get-image-data 0, 0, canvas.width, canvas.height
+
+  for i from 0 to pixels.data.length by 4
+    if pixels.data[i+0] is color[0] and
+       pixels.data[i+1] is color[1] and
+       pixels.data[i+2] is color[2]
+        pixels.data[i+3] = 0
+
+  context.put-image-data pixels, 0, 0
+  return canvas
+
+
 # Surface Class
 
 module.exports = class Surface
 
   (src, @width, @height) ->
-    @canvas = document.create-element \canvas
-    @ctx    = @canvas.get-context \2d
-    @ready  = no
+    @canvas    = document.create-element \canvas
+    @ctx       = @canvas.get-context \2d
+    @ready     = no
+    @color-key = null
 
     @reset-canvas-size!
 
@@ -45,13 +67,20 @@ module.exports = class Surface
     data.src = path
 
   save-image-data: (data) ->
-    #std.log 'SDL::Surface::saveImageData -', data
-    @data  = data
+    @data = if @color-key then make-transparent data, @color-key else data
     @ready = yes
+    @ctx.clear-rect 0, 0, @width, @height
     @ctx.draw-image @data, 0, 0, @width, @height
+
+  set-color-key: (color) ->
+    @color-key = color
+    if @ready then @save-image-data @data
 
   clear: ->
     @ctx.clear-rect 0, 0, @width, @height
+
+  @set-color-key = (surface, color) ->
+    surface.set-color-key color
 
   @blit-surface = (source, src-rect, dest, dest-rect) ->
     #std.log 'blit:', src-rect, dest-rect
