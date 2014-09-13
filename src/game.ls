@@ -22,7 +22,7 @@ Map    = require \./map
 
 # Reference constants
 
-{ kScreenWidth, kScreenHeight, kFps, kDebugMode } = config
+{ kScreenWidth, kScreenHeight, kFps, kMaxFrameTime, kDebugMode } = config
 
 
 # State
@@ -84,8 +84,12 @@ event-loop = ->
   else
     player.look-horizontal!
 
+  # Measure time since last frame. If it's longer than the max skippable
+  # frames, use that instead to stop the player falling out of the world
+  # and causing errors.
+  Δt = std.min SDL.get-ticks! - last-frame-time, kMaxFrameTime
+
   # Update and draw world
-  Δt = SDL.get-ticks! - last-frame-time
   update Δt
   draw!
 
@@ -100,6 +104,7 @@ event-loop = ->
 
     # This isn't even slightly similar to SDL_Delay but I've called it the
     # same and put it in SDL Mock for consistency with Chris' codebase.
+    # Really, it ignores the delay time and calls requestAnimationFrame.
     SDL.delay 1000ms / kFps - elapsed-time, event-loop
 
   else

@@ -16,7 +16,9 @@
 
 export kScreenWidth  = 20  # Tiles
 export kScreenHeight = 15  # Tiles
-export kFps          = 60  # Hz
+
+export kFps          = 60
+export kMaxFrameTime = 5 * 1000 / kFps
 
 export kDebugMode = on
 
