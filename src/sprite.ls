@@ -71,6 +71,7 @@ export class NumberSprite
   kDigitSrcWidth  = tile-to-px 0.5
   kDigitSrcHeight = tile-to-px 0.5
   kDigitSize      = units.kHalfTile
+  kRadix          = 10
 
   # NumberSprite (Graphics, Number) -> NumberSprite
   #
@@ -98,7 +99,7 @@ export class NumberSprite
       [ 0 ]
     else
       while num isnt 0
-        digit = num % 10
-        num := num `div` 10
+        digit = num % kRadix
+        num := num `div` kRadix
         digit
 
