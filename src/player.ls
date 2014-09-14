@@ -8,12 +8,13 @@ require! \./units
 require! \./config
 require! \./readout
 
-
 { kHalfTile, tile-to-game, tile-to-px } = units
 
 { WALL_TILE }       = require \./map
 { Rectangle: Rect } = require \./rectangle
+{ Timer }           = require \./timer
 { Health }          = require \./health
+
 { Sprite, AnimatedSprite, NumberSprite } = require \./sprite
 
 
@@ -86,15 +87,14 @@ export class Player
     @on-ground         = no
     @jump-active       = no
     @interacting       = no
-    @invincible        = no
 
     # Timers
-    @invincible-time = 0
+    @invincible-timer = new Timer kInvincibleTime
 
     # HUD
     @health = new Health graphics
 
-    # Sprite management
+    # Sprites
     @sprites = @initialise-sprites graphics
 
     # Debug
@@ -138,15 +138,9 @@ export class Player
 
   update: (elapsed-time, map) ->
     @sprites[@get-sprite-state!].update elapsed-time
-
-    if @invincible
-      @invincible-time += elapsed-time
-      @invincible = @invincible-time < kInvincibleTime
-
     @health.update elapsed-time
     @update-x elapsed-time, map
     @update-y elapsed-time, map
-
 
   update-x: (elapsed-time, map) ->
     acc-x = if @on-ground then kWalkingAcceleration else kAirAcceleration
@@ -227,14 +221,15 @@ export class Player
           @on-ground = yes
 
   take-damage: (damage) ->
-    unless @invincible
+    unless @invincible-timer.is-active!
       @health.take-damage 2
       @velocity-y = std.min -kShortJumpSpeed, @velocity-y
       @invincible = yes
-      @invincible-time = 0
+      @invincible-timer.reset!
 
   sprite-is-visible: ->
-    not (@invincible and @invincible-time `std.div` kInvincibleFlashTime % 2 is 0)
+    duty = @invincible-timer.current-time `std.div` kInvincibleFlashTime % 2 is 0
+    return not (@invincible-timer.is-active! and duty)
 
   draw-hud: (graphics) ->
     return unless @sprite-is-visible!

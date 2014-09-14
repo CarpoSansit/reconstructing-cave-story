@@ -8,7 +8,7 @@ require! \./units
 
 { div } = std
 { kHalfTile, tile-to-px, px-to-game, tile-to-game } = units
-
+{ Timer } = require \./timer
 { Sprite, NumberSprite, VaryingWidthSprite } = require \./sprite
 
 
@@ -21,10 +21,11 @@ kHealthFillY = tile-to-game 2
 kHealthNumX  = tile-to-game 1.5
 kHealthNumY  = tile-to-game 2
 
-kMaxFillPx  = tile-to-px(2.5) - 1
+kMaxFillPx   = tile-to-px(2.5) - 1
 
-kDamageTime = 1500
+kDamageDelay = 1500
 
+kSpritePath  = 'data/16x16/TextBox.bmp'
 
 # Health class
 
@@ -35,36 +36,30 @@ export class Health
 
     @current-health = @max-health
     @damage = 0
-
-    # Timers
-    @damage-time = 0
+    @damage-timer = new Timer kDamageDelay
 
     # Sprites
-    @health-bar-sprite = new Sprite graphics, 'data/16x16/TextBox.bmp',
+    @health-bar-sprite = new Sprite graphics, kSpritePath,
       0, tile-to-px(2.5), tile-to-px(4), tile-to-px(0.5)
-
-    @health-fill-sprite = new VaryingWidthSprite graphics, 'data/16x16/TextBox.bmp',
+    @health-fill-sprite = new VaryingWidthSprite graphics, kSpritePath,
       0, tile-to-px(1.5), kMaxFillPx, tile-to-px(0.5)
-
-    @damage-fill-sprite = new VaryingWidthSprite graphics, 'data/16x16/TextBox.bmp',
+    @damage-fill-sprite = new VaryingWidthSprite graphics, kSpritePath,
       0, tile-to-px(2.0), kMaxFillPx, tile-to-px(0.5)
 
   # Health::take-damage (HP) -> Bool
   take-damage: (damage) ->
     return if @current-health is 0
-    @damage = damage
-    @damage-time = 0
+    @damage-timer.reset!
     @health-fill-sprite.set-width @fill-offset @current-health - damage
     @damage-fill-sprite.set-width @fill-offset damage
+    @damage = damage
     return @current-health - damage <= 0
 
   # Health::update (ms)
   update: (elapsed-time) ->
-    if @damage
-      @damage-time += elapsed-time
-      if @damage-time >= kDamageTime
-        @current-health = std.max 0, @current-health - @damage
-        @damage = 0
+    if @damage > 0 and @damage-timer.is-expired!
+      @current-health = std.max 0, @current-health - @damage
+      @damage = 0
 
   # Health::fill-offset (HP)
   fill-offset: (health) ->

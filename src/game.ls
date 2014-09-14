@@ -18,11 +18,11 @@ Map    = require \./map
 
 { tile-to-game } = units
 
+{ Timer }         = require \./timer
 { Player }        = require \./player
+{ Rectangle }     = require \./rectangle
 { FirstCaveBat }  = require \./first-cave-bat
 { FixedBackdrop } = require \./backdrop
-{ Rectangle }     = require \./rectangle
-{ NumberSprite }  = require \./sprite
 
 
 # Reference constants
@@ -120,6 +120,7 @@ event-loop = ->
 update = (elapsed-time) ->
   player.update elapsed-time, map
   bat.update elapsed-time, player.x
+  Timer.update-all elapsed-time
 
   if bat.damage-collision!.collides-with player.damage-collision!
     readout.update \collided, true
