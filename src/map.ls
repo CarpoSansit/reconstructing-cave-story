@@ -6,6 +6,7 @@ require! \./units
 
 { div } = std
 
+{ tile-to-px } = units
 
 { Sprite }          = require \./sprite
 { FixedBackdrop }   = require \./backdrop
@@ -73,8 +74,11 @@ module.exports = class Map
     # new map
     map = new Map
 
+    bg-path = 'data/16x16/bkGard.bmp'
+    fg-path = 'data/16x16/Stage/PrtHell.bmp'
+
     # Create imple backdrop
-    map.backdrop = new FixedBackdrop 'data/16x16/bkBlue.bmp', graphics
+    map.backdrop = new FixedBackdrop bg-path, graphics
 
     # Create tile layout
     num-rows = 15
@@ -82,7 +86,7 @@ module.exports = class Map
     row = 11
 
     # Basic block
-    tile = new Tile WALL_TILE, new Sprite graphics, 'data/16x16/Stage/PrtCave.bmp',
+    tile = new Tile WALL_TILE, new Sprite graphics, fg-path,
       units.tile-to-px(1), 0,
       units.tile-to-px(1), units.tile-to-px(1)
 
@@ -98,13 +102,25 @@ module.exports = class Map
     map.tiles[10][3] = tile
 
     # Background tiles
-    chain-top = new Sprite graphics, 'data/16x16/Stage/PrtCave.bmp', units.tile-to-px(11), units.tile-to-px(2), units.tile-to-px(1), units.tile-to-px(1)
-    chain-mid = new Sprite graphics, 'data/16x16/Stage/PrtCave.bmp', units.tile-to-px(12), units.tile-to-px(2), units.tile-to-px(1), units.tile-to-px(1)
-    chain-btm = new Sprite graphics, 'data/16x16/Stage/PrtCave.bmp', units.tile-to-px(13), units.tile-to-px(2), units.tile-to-px(1), units.tile-to-px(1)
+
+    chain-top = new Sprite graphics, fg-path, tile-to-px(10), tile-to-px(4), tile-to-px(1), tile-to-px(1)
+    chain-mid = new Sprite graphics, fg-path, tile-to-px(10), tile-to-px(5), tile-to-px(1), tile-to-px(1)
+    chain-btm = new Sprite graphics, fg-path, tile-to-px(10), tile-to-px(6), tile-to-px(1), tile-to-px(1)
 
     map.bg-tiles[8][2] = chain-top
     map.bg-tiles[9][2] = chain-mid
     map.bg-tiles[10][2] = chain-btm
+
+    gate-a = new Sprite graphics, fg-path, tile-to-px(8), tile-to-px(9), tile-to-px(1), tile-to-px(1)
+    gate-b = new Sprite graphics, fg-path, tile-to-px(9), tile-to-px(9), tile-to-px(1), tile-to-px(1)
+    gate-c = new Sprite graphics, fg-path, tile-to-px(8), tile-to-px(10), tile-to-px(1), tile-to-px(1)
+    gate-d = new Sprite graphics, fg-path, tile-to-px(9), tile-to-px(10), tile-to-px(1), tile-to-px(1)
+
+    map.bg-tiles[9][15]  = gate-a
+    map.bg-tiles[9][16]  = gate-b
+    map.bg-tiles[10][15] = gate-c
+    map.bg-tiles[10][16] = gate-d
+
 
     return map
 

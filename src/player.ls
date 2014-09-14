@@ -14,6 +14,8 @@ require! \./readout
 { Rectangle: Rect } = require \./rectangle
 { Timer }           = require \./timer
 { Health }          = require \./health
+{ DamageText }      = require \./damage-text
+{ PolarStar }       = require \./arms
 
 { Sprite, AnimatedSprite, NumberSprite } = require \./sprite
 
@@ -96,6 +98,10 @@ export class Player
 
     # Sprites
     @sprites = @initialise-sprites graphics
+    @damage-text = new DamageText graphics
+
+    # Items
+    @gun = new PolarStar graphics
 
     # Debug
     if config.kDebugMode
@@ -141,6 +147,7 @@ export class Player
     @health.update elapsed-time
     @update-x elapsed-time, map
     @update-y elapsed-time, map
+    @damage-text.update elapsed-time
 
   update-x: (elapsed-time, map) ->
     acc-x = if @on-ground then kWalkingAcceleration else kAirAcceleration
@@ -220,25 +227,30 @@ export class Player
           @y = units.tile-to-game(tile.row) - kCollisionY.bottom
           @on-ground = yes
 
-  take-damage: (damage) ->
+  take-damage: (damage = 1) ->
     unless @invincible-timer.is-active!
-      @health.take-damage 2
+      @health.take-damage damage
       @velocity-y = std.min -kShortJumpSpeed, @velocity-y
       @invincible = yes
       @invincible-timer.reset!
+      @damage-text.set-damage damage
 
   sprite-is-visible: ->
     duty = @invincible-timer.current-time `std.div` kInvincibleFlashTime % 2 is 0
     return not (@invincible-timer.is-active! and duty)
 
+
+  # Draw
+
+  draw: (graphics) ->
+    if @sprite-is-visible!
+      @gun.draw graphics, @x, @y
+      @sprites[@get-sprite-state!].draw graphics, @x, @y
+    @damage-text.draw graphics, @center-x!, @center-y!
+
   draw-hud: (graphics) ->
     return unless @sprite-is-visible!
     @health.draw graphics
-
-  draw: (graphics) ->
-    return unless @sprite-is-visible!
-    #graphics.visualiseRect @damage-collision!, no
-    @sprites[@get-sprite-state!].draw graphics, @x, @y
 
   get-sprite-state: ->
     motion-type =
@@ -318,4 +330,9 @@ export class Player
 
   look-horizontal: ->
     @vertical-facing = HORIZONTAL
+
+
+  # Misc getter
+  center-x: -> @x + kHalfTile
+  center-y: -> @y + kHalfTile
 

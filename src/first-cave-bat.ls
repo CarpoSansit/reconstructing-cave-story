@@ -20,6 +20,7 @@ LEFT      = "L"
 kAngularVelocity = 120/1000  # degrees/second
 kFlyFps          = 15
 kNumFlyFrames    = 3
+kContactDamage   = 1
 
 
 # Private Class: SpriteState - this will generalise later
@@ -33,11 +34,12 @@ export class FirstCaveBat
 
   # FirstCaveBat (Game, Game)
   (graphics, @x, @center-y) ->
+    @y = @center-y
     @flight-angle = 0
     @angular-velocity = kAngularVelocity
     @horizontal-facing = RIGHT
     @sprites = @initialise-sprites graphics
-    @y = @center-y
+    @contact-damage = kContactDamage
 
   get-sprite-state: ->
     SpriteState @horizontal-facing

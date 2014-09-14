@@ -20,7 +20,9 @@ export class Timer
   update: (elapsed-time) ->
     @current-time += elapsed-time
 
-  reset: -> @current-time = 0
+  reset: ->
+    @current-time = 0
+
   is-active: -> @current-time < @expiration-time
   is-expired: -> not @is-active!
 

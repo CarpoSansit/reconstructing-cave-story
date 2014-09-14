@@ -10,6 +10,8 @@ require! \./units
 { div } = std
 { kHalfTile, tile-to-px, game-to-px } = units
 
+{ Rectangle: Rect } = require \./rectangle
+
 
 # Sprite class
 #
@@ -111,15 +113,13 @@ export class NumberSprite
     @height = kHalfTile
 
   # NumberSprite::draw (Graphics, Game, Game)
-  draw: (graphics, x, y, centered = no) ->
-    if centered
-      for glyph, i in @glyphs
-        offset = kDigitSize * (@digits.length - 1 - i)
-        glyph.draw graphics, x + @padding + offset - @width/2, y - @height/2
-    else
-      for glyph, i in @glyphs
-        offset = kDigitSize * (@digits.length - 1 - i)
-        glyph.draw graphics, x + @padding + offset, y
+  draw: (graphics, x, y) ->
+    for glyph, i in @glyphs
+      offset = kDigitSize * (@glyphs.length - 1 - i)
+      glyph.draw graphics, x + @padding + offset, y
+
+  draw-centered: (graphics, x, y) ->
+    @draw graphics, x - @width/2, y - @height/2
 
   # NumberSprite.seperate-digits (Number) -> Array
   @seperate-digits = (num) ->

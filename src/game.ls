@@ -118,13 +118,13 @@ event-loop = ->
 
 # Game::update
 update = (elapsed-time) ->
+  Timer.update-all elapsed-time
   player.update elapsed-time, map
   bat.update elapsed-time, player.x
-  Timer.update-all elapsed-time
 
   if bat.damage-collision!.collides-with player.damage-collision!
     readout.update \collided, true
-    player.take-damage!
+    player.take-damage bat.contact-damage
   else
     readout.update \collided, false
 
@@ -140,7 +140,7 @@ draw = ->
 # Game::create-test-world
 create-test-world = ->
   map    := Map.create-test-map graphics
-  player := new Player graphics, units.tile-to-game(kScreenWidth/2), units.tile-to-game(kScreenHeight/2)
+  player := new Player graphics, units.tile-to-game(kScreenWidth/2), units.tile-to-game(10)
   bat    := new FirstCaveBat graphics, units.tile-to-game(7), units.tile-to-game(8)
 
 
