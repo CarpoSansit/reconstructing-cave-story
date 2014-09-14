@@ -10,13 +10,15 @@ require! \./readout
 
 { kHalfTile, tile-to-game, tile-to-px } = units
 
+{ STANDING, WALKING, JUMPING, FALLING, INTERACTING,
+LEFT, RIGHT, UP, DOWN, HORIZONTAL }:SpriteState = require \./spritestate
+
 { WALL_TILE }       = require \./map
 { Rectangle: Rect } = require \./rectangle
 { Timer }           = require \./timer
 { Health }          = require \./health
 { DamageText }      = require \./damage-text
 { PolarStar }       = require \./arms
-
 { Sprite, AnimatedSprite, NumberSprite } = require \./sprite
 
 
@@ -49,27 +51,6 @@ kInvincibleFlashTime = 50
 # Collision boxes
 kCollisionX = new Rect 6, 10, 20, 12
 kCollisionY = new Rect 10, 2, 12, 30
-
-# For these, I'm using strings instead of numbers because it makes
-# the debug readout much easier to understand. If this has performance
-# implications later on I'll put it back.
-[ STANDING, WALKING, JUMPING, FALLING, INTERACTING ] = <[ S W J F I ]>
-[ LEFT, RIGHT ] = <[ L R ]>
-[ UP, DOWN, HORIZONTAL ] = <[ U D H ]>
-
-
-# Private class: SpriteState
-
-class SpriteState
-  ( @motion-type       = STANDING,
-    @horizontal-facing = LEFT,
-    @vertical-facing   = HORIZONTAL ) ->
-
-  key: ->
-    "#{@motion-type}-#{@horizontal-facing}-#{@vertical-facing}"
-
-  @key = (...args) ->
-    args.join '-'
 
 
 # Player class
@@ -244,8 +225,8 @@ export class Player
 
   draw: (graphics) ->
     if @sprite-is-visible!
-      @gun.draw graphics, @x, @y
       @sprites[@get-sprite-state!].draw graphics, @x, @y
+      @gun.draw graphics, @x, @y, @horizontal-facing, @vertical-facing
     @damage-text.draw graphics, @center-x!, @center-y!
 
   draw-hud: (graphics) ->
