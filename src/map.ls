@@ -74,8 +74,8 @@ module.exports = class Map
     # new map
     map = new Map
 
-    bg-path = 'data/16x16/bkGard.bmp'
-    fg-path = 'data/16x16/Stage/PrtHell.bmp'
+    bg-path = 'data/16x16/bkBlue.bmp'
+    fg-path = 'data/16x16/Stage/PrtCave.bmp'
 
     # Create imple backdrop
     map.backdrop = new FixedBackdrop bg-path, graphics
