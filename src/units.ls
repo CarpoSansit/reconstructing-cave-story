@@ -26,12 +26,16 @@ export MS  = std.id  # milliseconds
 export Velocity     = std.id  # game / ms
 export Acceleration = std.id  # game / ms / ms
 
+# Game Concepts
+export HP = std.floor
+
 # Conversion utils
 export game-to-px   = Pixel . (/ kPixelScaleFactor)
 export game-to-tile = Tile . (/ kGameUnitsPerTile)
 export tile-to-game = (* kGameUnitsPerTile)
 export tile-to-px   = game-to-px . tile-to-game
 export deg-to-rad   = (* kPi / 180)
+export px-to-game   = (* kPixelScaleFactor)
 
 # Convenience Constants
 export kOneTile  = tile-to-game 1

@@ -11,8 +11,9 @@ require! \./readout
 
 { kHalfTile, tile-to-game, tile-to-px } = units
 
-{ WALL_TILE }              = require \./map
-{ Rectangle: Rect }        = require \./rectangle
+{ WALL_TILE }       = require \./map
+{ Rectangle: Rect } = require \./rectangle
+{ Health }          = require \./health
 { Sprite, AnimatedSprite, NumberSprite } = require \./sprite
 
 
@@ -41,12 +42,6 @@ kJumpGravity         = 0.0003125
 # Time constants
 kInvincibleTime      = 3000
 kInvincibleFlashTime = 50
-
-# HUD Position
-kHealthBarX  = tile-to-game 1
-kHealthBarY  = tile-to-game 2
-kHealthFillX = tile-to-game 2.5
-kHealthFillY = tile-to-game 2
 
 # Collision boxes
 kCollisionX = new Rect 6, 10, 20, 12
@@ -97,13 +92,7 @@ export class Player
     @invincible-time = 0
 
     # HUD
-    @health-bar-sprite = new Sprite graphics, 'data/16x16/TextBox.bmp',
-      0, tile-to-px(2.5), tile-to-px(4), tile-to-px(0.5)
-
-    @health-fill-sprite = new Sprite graphics, 'data/16x16/TextBox.bmp',
-      0, tile-to-px(1.5), tile-to-px(2.5) - 1, tile-to-px(0.5)
-
-    @health-number-sprite = new NumberSprite graphics, 10, 2
+    @health = new Health graphics
 
     # Sprite management
     @sprites = @initialise-sprites graphics
@@ -154,6 +143,7 @@ export class Player
       @invincible-time += elapsed-time
       @invincible = @invincible-time < kInvincibleTime
 
+    @health.update elapsed-time
     @update-x elapsed-time, map
     @update-y elapsed-time, map
 
@@ -238,6 +228,7 @@ export class Player
 
   take-damage: (damage) ->
     unless @invincible
+      @health.take-damage 2
       @velocity-y = std.min -kShortJumpSpeed, @velocity-y
       @invincible = yes
       @invincible-time = 0
@@ -247,9 +238,7 @@ export class Player
 
   draw-hud: (graphics) ->
     return unless @sprite-is-visible!
-    @health-bar-sprite.draw    graphics, kHealthBarX, kHealthBarY
-    @health-fill-sprite.draw   graphics, tile-to-game(2.5), tile-to-game(2)
-    @health-number-sprite.draw graphics, tile-to-game(1.5), tile-to-game(2)
+    @health.draw graphics
 
   draw: (graphics) ->
     return unless @sprite-is-visible!

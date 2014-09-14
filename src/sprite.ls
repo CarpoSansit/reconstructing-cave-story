@@ -103,3 +103,27 @@ export class NumberSprite
         num := num `div` kRadix
         digit
 
+
+
+# VaryingWidthSprite
+#
+# Control width of drawn region on the fly
+
+export class VaryingWidthSprite extends Sprite
+
+  # VaryingWidthSprite : Sprite (Graphics)
+  (graphics, path, source-x, source-y, @initial-width, @height) ->
+
+    super ...
+    @width = @initial-width
+
+  # VaryingWidthSprite::set-width (Pixels)
+  set-width: (width) ->
+    @width = width
+
+  # VaryingWidthSprite::draw (Graphics)
+  #draw: (graphics) ->
+
+
+
+
