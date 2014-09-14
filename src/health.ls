@@ -81,6 +81,6 @@ export class Health
         x = kHealthFillX + px-to-game @fill-offset @current-health - @damage
         @damage-fill-sprite.draw graphics, x, kHealthFillY
 
-    (new NumberSprite graphics, @current-health, 2).draw graphics,
+    (new NumberSprite.HUDNumber graphics, @current-health, 2).draw graphics,
       kHealthNumX,  kHealthNumY
 

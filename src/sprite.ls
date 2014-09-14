@@ -70,8 +70,15 @@ export class NumberSprite
   kDigitSrcY      = tile-to-px 3.5
   kDigitSrcWidth  = tile-to-px 0.5
   kDigitSrcHeight = tile-to-px 0.5
+  kOpPlusSrcX     = tile-to-px 2
+  kOpMinusSrcX    = tile-to-px 2.5
+  kOpSrcY         = tile-to-px 3
   kDigitSize      = units.kHalfTile
   kRadix          = 10
+
+  [ WHITE, RED ] = std.enum
+  [ PLUS, MINUS, NONE ] = std.enum
+
 
   # NumberSprite (Graphics, Number) -> NumberSprite
   #
@@ -79,19 +86,40 @@ export class NumberSprite
   # If len is zero then it's left-aligned instead, and can be as long as it
   # wants. We don't handle the case where len lies about the number.
 
-  (graphics, @num, @len = 0) ->
+  (graphics, @num, @len, @color, @op) ->
     @digits = NumberSprite.seperate-digits @num
     @num-digits = @digits.length
     @padding = if @len is 0 then 0 else kDigitSize * (@len - @num-digits)
+
+    # Choose color
+    srcY = if @color is WHITE then kDigitSrcY else kDigitSrcY + game-to-px kHalfTile
+
     @glyphs = @digits.map ->
       new Sprite graphics, 'data/16x16/TextBox.bmp',
-        tile-to-px(0.5 * it), kDigitSrcY, kDigitSrcWidth, kDigitSrcHeight
+        tile-to-px(0.5 * it), srcY, kDigitSrcWidth, kDigitSrcHeight
+
+    # Add operators for damage/experience numbers
+    if @op is PLUS
+      @glyphs.push new Sprite graphics, 'data/16x16/TextBox.bmp',
+        kOpPlusSrcX, kOpSrcY, kDigitSrcWidth, kDigitSrcHeight
+
+    if @op is MINUS
+      @glyphs.push new Sprite graphics, 'data/16x16/TextBox.bmp',
+        kOpMinusSrcX, kOpSrcY, kDigitSrcWidth, kDigitSrcHeight
+
+    @width  = kHalfTile * @glyphs.length
+    @height = kHalfTile
 
   # NumberSprite::draw (Graphics, Game, Game)
-  draw: (graphics, x, y) ->
-    for glyph, i in @glyphs
-      offset = kDigitSize * (@digits.length - 1 - i)
-      glyph.draw graphics, x + @padding + offset, y
+  draw: (graphics, x, y, centered = no) ->
+    if centered
+      for glyph, i in @glyphs
+        offset = kDigitSize * (@digits.length - 1 - i)
+        glyph.draw graphics, x + @padding + offset - @width/2, y - @height/2
+    else
+      for glyph, i in @glyphs
+        offset = kDigitSize * (@digits.length - 1 - i)
+        glyph.draw graphics, x + @padding + offset, y
 
   # NumberSprite.seperate-digits (Number) -> Array
   @seperate-digits = (num) ->
@@ -103,6 +131,19 @@ export class NumberSprite
         num := num `div` kRadix
         digit
 
+  # 'Named Constructors'
+
+  # NumberSprite.HUDNumber (Graphics, Number, Number)
+  @HUDNumber = (graphics, @num, @len) ->
+    new NumberSprite graphics, @num, @len, WHITE, NONE
+
+  # NumberSprite.DamageNumber (Graphics, Number)
+  @DamageNumber = (graphics, @num) ->
+    new NumberSprite graphics, @num, 0, RED, MINUS
+
+  # NumberSprite.ExperienceNumber (Graphics, Number)
+  @ExperienceNumber = (graphics, @num) ->
+    new NumberSprite graphics, @num, 0, WHITE, PLUS
 
 
 # VaryingWidthSprite

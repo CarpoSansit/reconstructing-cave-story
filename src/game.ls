@@ -16,10 +16,13 @@ require! \./graphics
 
 Map    = require \./map
 
+{ tile-to-game } = units
+
 { Player }        = require \./player
 { FirstCaveBat }  = require \./first-cave-bat
 { FixedBackdrop } = require \./backdrop
 { Rectangle }     = require \./rectangle
+{ NumberSprite }  = require \./sprite
 
 
 # Reference constants
