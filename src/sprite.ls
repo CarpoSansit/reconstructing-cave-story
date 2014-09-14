@@ -7,6 +7,9 @@ require! \SDL
 require! \std
 require! \./units
 
+{ div } = std
+{ kHalfTile, tile-to-px, game-to-px } = units
+
 
 # Sprite class
 #
@@ -57,4 +60,45 @@ export class AnimatedSprite extends Sprite
         @source-rect.x -= @source-rect.w * (@num-frames - 1)
         @current-frame = 0
 
+
+# NumberSprite
+#
+# For drawing numbers like on the healt HUD
+
+export class NumberSprite
+
+  kDigitSrcY      = tile-to-px 3.5
+  kDigitSrcWidth  = tile-to-px 0.5
+  kDigitSrcHeight = tile-to-px 0.5
+  kDigitSize      = units.kHalfTile
+
+  # NumberSprite (Graphics, Number) -> NumberSprite
+  #
+  # len is the expected length of the number so we can right-align the output.
+  # If len is zero then it's left-aligned instead, and can be as long as it
+  # wants. We don't handle the case where len lies about the number.
+
+  (graphics, @num, @len = 0) ->
+    @digits = NumberSprite.seperate-digits @num
+    @num-digits = @digits.length
+    @padding = if @len is 0 then 0 else kDigitSize * (@len - @num-digits)
+    @glyphs = @digits.map ->
+      new Sprite graphics, 'data/16x16/TextBox.bmp',
+        tile-to-px(0.5 * it), kDigitSrcY, kDigitSrcWidth, kDigitSrcHeight
+
+  # NumberSprite::draw (Graphics, Game, Game)
+  draw: (graphics, x, y) ->
+    for glyph, i in @glyphs
+      offset = kDigitSize * (@digits.length - 1 - i)
+      glyph.draw graphics, x + @padding + offset, y
+
+  # NumberSprite.seperate-digits (Number) -> Array
+  @seperate-digits = (num) ->
+    if num is 0
+      [ 0 ]
+    else
+      while num isnt 0
+        digit = num % 10
+        num := num `div` 10
+        digit
 

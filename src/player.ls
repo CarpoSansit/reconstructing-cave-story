@@ -13,7 +13,7 @@ require! \./readout
 
 { WALL_TILE }              = require \./map
 { Rectangle: Rect }        = require \./rectangle
-{ Sprite, AnimatedSprite } = require \./sprite
+{ Sprite, AnimatedSprite, NumberSprite } = require \./sprite
 
 
 # Animation constants
@@ -103,8 +103,7 @@ export class Player
     @health-fill-sprite = new Sprite graphics, 'data/16x16/TextBox.bmp',
       0, tile-to-px(1.5), tile-to-px(2.5) - 1, tile-to-px(0.5)
 
-    @three = new Sprite graphics, 'data/16x16/TextBox.bmp',
-      tile-to-px(1.5), tile-to-px(3.5), tile-to-px(0.5), tile-to-px(0.5)
+    @health-number-sprite = new NumberSprite graphics, 10, 2
 
     # Sprite management
     @sprites = @initialise-sprites graphics
@@ -248,9 +247,9 @@ export class Player
 
   draw-hud: (graphics) ->
     return unless @sprite-is-visible!
-    @health-bar-sprite.draw graphics,  kHealthBarX, kHealthBarY
-    @health-fill-sprite.draw graphics, tile-to-game(2.5), tile-to-game(2)
-    @three.draw graphics, tile-to-game(2), tile-to-game(2)
+    @health-bar-sprite.draw    graphics, kHealthBarX, kHealthBarY
+    @health-fill-sprite.draw   graphics, tile-to-game(2.5), tile-to-game(2)
+    @health-number-sprite.draw graphics, tile-to-game(1.5), tile-to-game(2)
 
   draw: (graphics) ->
     return unless @sprite-is-visible!
