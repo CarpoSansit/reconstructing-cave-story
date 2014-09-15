@@ -11,9 +11,11 @@ require! \./units
 
 { kHalfTile, tile-to-px, tile-to-game, game-to-px } = units
 
-{ Sprite } = require \./sprite
-{ STANDING, WALKING, JUMPING, FALLING, INTERACTING,
-LEFT, RIGHT, UP, DOWN, HORIZONTAL }:SpriteState = require \./spritestate
+{ Sprite }      = require \./sprite
+{ SpriteState } = require \./spritestate
+
+{ LEFT, RIGHT, UP, DOWN, HORIZONTAL } = require \./spritestate
+
 
 # Assets
 kArmsSpritePath   = 'data/16x16/Arms.bmp'
@@ -36,46 +38,33 @@ kPolarStarIndex = 2
 # Not currently needed
 
 
-
 # Polar Star
 
 export class PolarStar
 
   (graphics) ->
+    @sprites = @initialise-sprites graphics
 
-    std.log @sprites = @initialise-sprites graphics
+  initialise-sprites: (graphics) ->
+    SpriteState.generate-with (state) ->
+      tile-y = if state.LEFT then kLeftOffset else kRightOffset
 
+      switch true
+      | state.HORIZONTAL => tile-y += kHorizontalOffset
+      | state.UP         => tile-y += kUpOffset
+      | state.DOWN       => tile-y += kDownOffset
 
-  initialise-sprite: (graphics, hfacing, vfacing) ->
-
-    tile-y = if hfacing is LEFT then kLeftOffset else kRightOffset
-
-    switch vfacing
-    | HORIZONTAL => tile-y += kHorizontalOffset
-    | UP         => tile-y += kUpOffset
-    | DOWN       => tile-y += kDownOffset
-    | otherwise  => void
-
-    new Sprite graphics, kArmsSpritePath, tile-to-px(kPolarStarIndex * kSpriteWidth),
-      tile-to-px(tile-y), tile-to-px(kSpriteWidth), tile-to-px(kSpriteHeight)
-
-  initialise-sprites: (graphics, sprite-map = {}) ->
-    for hfacing in [ LEFT, RIGHT ]
-      for vfacing in [ UP, DOWN, HORIZONTAL ]
-        sprite-map[ SpriteState.key hfacing, vfacing ] =
-          @initialise-sprite graphics, hfacing, vfacing
-    return sprite-map
+      new Sprite graphics, kArmsSpritePath,
+        tile-to-px(kPolarStarIndex * kSpriteWidth), tile-to-px(tile-y),
+        tile-to-px(kSpriteWidth), tile-to-px(kSpriteHeight)
 
   update: (elapsed-time) ->
 
-  draw: (graphics, x, y, hfacing, vfacing) ->
+  draw: (graphics, x, y, state) ->
+    x-offset = if state.LEFT then -kHalfTile else 0
+    y-offset = if state.UP   then -kHalfTile / 2 else 0
+    y-offset = if state.DOWN then  kHalfTile / 2 else 0
 
-    x-offset = if hfacing is LEFT then -kHalfTile else 0
-    y-offset = if vfacing is UP   then -kHalfTile / 2 else 0
-    y-offset = if vfacing is DOWN then  kHalfTile / 2 else 0
-
-    @sprites[ SpriteState.key hfacing, vfacing ].draw graphics,
-      x + x-offset, y + y-offset
-
+    @sprites[ state.key ].draw graphics, x + x-offset, y + y-offset
 
 

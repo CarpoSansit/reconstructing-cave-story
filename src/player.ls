@@ -10,8 +10,7 @@ require! \./readout
 
 { kHalfTile, tile-to-game, tile-to-px } = units
 
-{ STANDING, WALKING, JUMPING, FALLING, INTERACTING,
-LEFT, RIGHT, UP, DOWN, HORIZONTAL }:SpriteState = require \./spritestate
+{ SpriteState, State } = require \./spritestate
 
 { WALL_TILE }       = require \./map
 { Rectangle: Rect } = require \./rectangle
@@ -65,8 +64,8 @@ export class Player
     @velocity-y        = 0
     @velocity-x        = 0
     @acceleration-x    = 0
-    @horizontal-facing = LEFT
-    @vertical-facing   = HORIZONTAL
+    @horizontal-facing = State.LEFT
+    @vertical-facing   = State.HORIZONTAL
     @on-ground         = no
     @jump-active       = no
     @interacting       = no
@@ -84,47 +83,34 @@ export class Player
     # Items
     @gun = new PolarStar graphics
 
-    # Debug
-    if config.kDebugMode
-      readout.add-reader \spritestate, 'SpriteState'
-
-  initialise-sprite: (graphics, motion, hfacing, vfacing) ->
-    tile-x =
-      switch motion
-      | WALKING     => kWalkFrame
-      | STANDING    => kStandFrame
-      | JUMPING     => kJumpFrame
-      | FALLING     => kFallFrame
-      | INTERACTING => kBackFrame
-      | _ => void
-
-    tile-x += if vfacing is UP then kUpFrameOffset else 0
-
-    tile-y = kCharacterFrame + if hfacing is LEFT then 0 else 1
-
-    if motion is WALKING
-      new AnimatedSprite graphics, 'data/16x16/MyChar.bmp',
-        units.tile-to-px(tile-x), units.tile-to-px(tile-y),
-        units.tile-to-px(1), units.tile-to-px(1),
-        kWalkFps, 3
-    else
-      if vfacing is DOWN and (motion is JUMPING or motion is FALLING)
-        source-x = kDownFrame
-
-      new Sprite graphics, 'data/16x16/MyChar.bmp',
-        units.tile-to-px(tile-x), units.tile-to-px(tile-y),
-        units.tile-to-px(1), units.tile-to-px(1)
-
   initialise-sprites: (graphics, sprite-map = {}) ->
-    for motion in [ STANDING, WALKING, JUMPING, FALLING, INTERACTING ]
-      for hfacing in [ LEFT, RIGHT ]
-        for vfacing in [ UP, DOWN, HORIZONTAL ]
-          sprite-map[ SpriteState.key motion, hfacing, vfacing ] =
-            @initialise-sprite graphics, motion, hfacing, vfacing
-    return sprite-map
+    SpriteState.generate-with (state) ->
+      tile-x = switch true
+        | state.WALKING     => kWalkFrame
+        | state.STANDING    => kStandFrame
+        | state.JUMPING     => kJumpFrame
+        | state.FALLING     => kFallFrame
+        | state.INTERACTING => kBackFrame
+        | _ => void
+
+      tile-x += if state.UP then kUpFrameOffset else 0
+      tile-y = kCharacterFrame + if state.LEFT then 0 else 1
+
+      if state.WALKING
+        new AnimatedSprite graphics, 'data/16x16/MyChar.bmp',
+          units.tile-to-px(tile-x), units.tile-to-px(tile-y),
+          units.tile-to-px(1), units.tile-to-px(1),
+          kWalkFps, 3
+      else
+        if state.DOWN and (state.JUMPING or state.FALLING)
+          source-x = kDownFrame
+
+        new Sprite graphics, 'data/16x16/MyChar.bmp',
+          units.tile-to-px(tile-x), units.tile-to-px(tile-y),
+          units.tile-to-px(1), units.tile-to-px(1)
 
   update: (elapsed-time, map) ->
-    @sprites[@get-sprite-state!].update elapsed-time
+    @sprites[@get-sprite-state!key].update elapsed-time
     @health.update elapsed-time
     @update-x elapsed-time, map
     @update-y elapsed-time, map
@@ -225,8 +211,9 @@ export class Player
 
   draw: (graphics) ->
     if @sprite-is-visible!
-      @sprites[@get-sprite-state!].draw graphics, @x, @y
-      @gun.draw graphics, @x, @y, @horizontal-facing, @vertical-facing
+      state = @get-sprite-state!
+      @gun.draw graphics, @x, @y, state
+      @sprites[state.key].draw graphics, @x, @y
     @damage-text.draw graphics, @center-x!, @center-y!
 
   draw-hud: (graphics) ->
@@ -236,14 +223,12 @@ export class Player
   get-sprite-state: ->
     motion-type =
       if @interacting
-        INTERACTING
+        State.INTERACTING
       else if @on-ground
-        if @acceleration-x is 0 then STANDING else WALKING
+        if @acceleration-x is 0 then State.STANDING else State.WALKING
       else
-        if @velocity-y < 0 then JUMPING else FALLING
-    key = SpriteState.key motion-type, @horizontal-facing, @vertical-facing
-    readout.update \spritestate, key
-    return key
+        if @velocity-y < 0 then State.JUMPING else State.FALLING
+    SpriteState.make @horizontal-facing, @vertical-facing, motion-type
 
 
   # Collision spaces
@@ -280,12 +265,12 @@ export class Player
   # Button handlers
 
   start-moving-left: ->
-    @horizontal-facing = LEFT
+    @horizontal-facing = State.LEFT
     @acceleration-x = -1
     @interacting = no
 
   start-moving-right: ->
-    @horizontal-facing = RIGHT
+    @horizontal-facing = State.RIGHT
     @acceleration-x = 1
     @interacting = no
 
@@ -301,16 +286,16 @@ export class Player
     @jump-active = no
 
   look-up: ->
-    @vertical-facing = UP
+    @vertical-facing = State.UP
     @interacting = no
 
   look-down: ->
-    return if @vertical-facing is DOWN
-    @vertical-facing = DOWN
+    return if @vertical-facing is State.DOWN
+    @vertical-facing = State.DOWN
     @interacting = @on-ground
 
   look-horizontal: ->
-    @vertical-facing = HORIZONTAL
+    @vertical-facing = State.HORIZONTAL
 
 
   # Misc getter
