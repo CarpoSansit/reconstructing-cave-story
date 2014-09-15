@@ -53,5 +53,6 @@ export timer.get-ticks
 export event-queue.poll-event
 export screen.set-video-mode
 export Surface.blit-surface
+export Surface.set-color-key
 export Surface.load-image
 

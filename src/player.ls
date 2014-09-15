@@ -1,152 +1,319 @@
 
-# Require
+#
+# Player
+#
 
 require! \std
-require! \./graphics
+require! \./units
+require! \./config
+require! \./readout
 
-Game           = require \./game
-Sprite         = require \./sprite
-AnimatedSprite = require \./animated-sprite
+{ kHalfTile, tile-to-game, tile-to-px } = units
+
+{ STANDING, WALKING, JUMPING, FALLING, INTERACTING,
+LEFT, RIGHT, UP, DOWN, HORIZONTAL }:SpriteState = require \./spritestate
+
+{ WALL_TILE }       = require \./map
+{ Rectangle: Rect } = require \./rectangle
+{ Timer }           = require \./timer
+{ Health }          = require \./health
+{ DamageText }      = require \./damage-text
+{ PolarStar }       = require \./arms
+{ Sprite, AnimatedSprite, NumberSprite } = require \./sprite
 
 
 # Animation constants
-kSpriteFrameTime     = 15
+kCharacterFrame = 0
+kWalkFrame      = 0
+kStandFrame     = 0
+kJumpFrame      = 1
+kFallFrame      = 2
+kUpFrameOffset  = 3
+kDownFrame      = 6
+kBackFrame      = 7
+kWalkFps        = 15
 
 # Physics constants
-kSlowdownFactor      = 0.8
-kWalkingAcceleration = 0.0012
-kMaxSpeedX           = 0.325
-kMaxSpeedY           = 0.325
-kJumpSpeed           = 0.325
-kJumpTime            = 275
-kGravity             = 0.0012
+kFriction            = 0.00049804687
+kGravity             = 0.00078125
+kWalkingAcceleration = 0.00083007812
+kAirAcceleration     = 0.0003125
+kMaxSpeedX           = 0.15859375
+kMaxSpeedY           = 0.2998046875
+kJumpSpeed           = 0.25
+kShortJumpSpeed      = 0.25 / 1.5
+kJumpGravity         = 0.0003125
 
-# Enumerated constants
-[ STANDING, WALKING ] = std.enum
-[ LEFT, RIGHT ] = std.enum
+# Time constants
+kInvincibleTime      = 3000
+kInvincibleFlashTime = 50
 
-
-# Private class: SpriteState
-class SpriteState
-  (@motion-type = STANDING, @horizontal-facing = LEFT) ->
-  key: -> "#{@motion-type}-#{@horizontal-facing}"
-  @key = (...args) -> args.join '-'
-
-# Private class: Jump
-class Jump
-  ->
-    @time-remaining = 0ms
-    @active         = no
-
-  update: (elapsed-time) ->
-    if @active
-      @time-remaining -= elapsed-time
-      if @time-remaining <= 0
-        @active = no
-
-  reset: ->
-    @time-remaining = kJumpTime
-    @reactivate!
-
-  reactivate: ->
-    @active = @time-remaining > 0
-
-  deactivate: ->
-    @active = no
-
+# Collision boxes
+kCollisionX = new Rect 6, 10, 20, 12
+kCollisionY = new Rect 10, 2, 12, 30
 
 
 # Player class
-module.exports = class Player
 
-  (@x, @y) ->
+export class Player
+
+  # Player (Game, Game) - Initial position - constructor
+
+  (graphics, @x, @y) ->
 
     # Player state (excluding x and y)
     @velocity-y        = 0
     @velocity-x        = 0
     @acceleration-x    = 0
     @horizontal-facing = LEFT
+    @vertical-facing   = HORIZONTAL
     @on-ground         = no
+    @jump-active       = no
+    @interacting       = no
 
-    # Helper instances
-    @jump = new Jump
+    # Timers
+    @invincible-timer = new Timer kInvincibleTime
 
-    # Sprite management
-    @sprite-state = new SpriteState STANDING, LEFT
-    @sprites = @initialise-sprites!
+    # HUD
+    @health = new Health graphics
 
-  initialise-sprites: (sprite-map = {}) ->
+    # Sprites
+    @sprites = @initialise-sprites graphics
+    @damage-text = new DamageText graphics
 
-    "#{SpriteState.key( STANDING, LEFT )}":
-      new Sprite graphics, 'content/MyChar.bmp',
-        0, 0, Game.kTileSize, Game.kTileSize
+    # Items
+    @gun = new PolarStar graphics
 
-    "#{SpriteState.key( WALKING, LEFT )}":
-      new AnimatedSprite graphics, 'content/MyChar.bmp',
-        0, 0, Game.kTileSize, Game.kTileSize, kSpriteFrameTime, 3
+    # Debug
+    if config.kDebugMode
+      readout.add-reader \spritestate, 'SpriteState'
 
-    "#{SpriteState.key( STANDING, RIGHT )}":
-      new Sprite graphics, 'content/MyChar.bmp',
-        0, Game.kTileSize, Game.kTileSize, Game.kTileSize
+  initialise-sprite: (graphics, motion, hfacing, vfacing) ->
+    tile-x =
+      switch motion
+      | WALKING     => kWalkFrame
+      | STANDING    => kStandFrame
+      | JUMPING     => kJumpFrame
+      | FALLING     => kFallFrame
+      | INTERACTING => kBackFrame
+      | _ => void
 
-    "#{SpriteState.key( WALKING, RIGHT )}":
-      new AnimatedSprite graphics, 'content/MyChar.bmp',
-        0, Game.kTileSize, Game.kTileSize, Game.kTileSize, kSpriteFrameTime, 3
+    tile-x += if vfacing is UP then kUpFrameOffset else 0
 
-  update: (elapsed-time) ->
+    tile-y = kCharacterFrame + if hfacing is LEFT then 0 else 1
 
-    # Propagate update to member instances
+    if motion is WALKING
+      new AnimatedSprite graphics, 'data/16x16/MyChar.bmp',
+        units.tile-to-px(tile-x), units.tile-to-px(tile-y),
+        units.tile-to-px(1), units.tile-to-px(1),
+        kWalkFps, 3
+    else
+      if vfacing is DOWN and (motion is JUMPING or motion is FALLING)
+        source-x = kDownFrame
+
+      new Sprite graphics, 'data/16x16/MyChar.bmp',
+        units.tile-to-px(tile-x), units.tile-to-px(tile-y),
+        units.tile-to-px(1), units.tile-to-px(1)
+
+  initialise-sprites: (graphics, sprite-map = {}) ->
+    for motion in [ STANDING, WALKING, JUMPING, FALLING, INTERACTING ]
+      for hfacing in [ LEFT, RIGHT ]
+        for vfacing in [ UP, DOWN, HORIZONTAL ]
+          sprite-map[ SpriteState.key motion, hfacing, vfacing ] =
+            @initialise-sprite graphics, motion, hfacing, vfacing
+    return sprite-map
+
+  update: (elapsed-time, map) ->
     @sprites[@get-sprite-state!].update elapsed-time
-    @jump.update elapsed-time
+    @health.update elapsed-time
+    @update-x elapsed-time, map
+    @update-y elapsed-time, map
+    @damage-text.update elapsed-time
 
-    # Update physics
-    @x += std.round @velocity-x * elapsed-time
-    @y += std.round @velocity-y * elapsed-time
+  update-x: (elapsed-time, map) ->
+    acc-x = if @on-ground then kWalkingAcceleration else kAirAcceleration
+    @velocity-x += @acceleration-x * acc-x * elapsed-time
 
-    @velocity-x += @acceleration-x * elapsed-time
-    unless @jump.active
-      @velocity-y = std.min @velocity-y + kGravity * elapsed-time, kMaxSpeedY
-
-    # MOCK: Pretend floor
-    if @y >= 320
-      @y = 320
-      @velocity-y = 0
-
-    @on-ground = @y >= 320
-
-    # Impart intention to Quote's position
     if @acceleration-x < 0
       @velocity-x = std.max(@velocity-x, -kMaxSpeedX);
     else if @acceleration-x > 0
       @velocity-x = std.min(@velocity-x, kMaxSpeedX);
     else if @on-ground
-      @velocity-x *= kSlowdownFactor
+      @velocity-x =
+        if @velocity-x > 0
+          std.max 0, @velocity-x - kFriction * elapsed-time
+        else
+          std.min 0, @velocity-x + kFriction * elapsed-time
 
-  get-sprite-state: ->
-    motion-type = if @acceleration-x is 0 then STANDING else WALKING
-    SpriteState.key motion-type, @horizontal-facing
+    Δx = @velocity-x * elapsed-time
+
+    if Δx > 0
+      @on-wall-collision map, (@right-collision Δx), (tile) ->
+        if tile
+          @x = units.tile-to-game(tile.col) - kCollisionX.right
+          @velocity-x = 0
+        else
+          @x += Δx
+
+      @on-wall-collision map, (@left-collision 0), (tile) ->
+        if tile
+          @x = units.tile-to-game(tile.col) + kCollisionX.right
+
+    else
+      @on-wall-collision map, (@left-collision Δx), (tile) ->
+        if tile
+          @x = units.tile-to-game(tile.col) + kCollisionX.right
+          @velocity-x = 0
+        else
+          @x += Δx
+
+      @on-wall-collision map, (@right-collision 0), (tile) ->
+        if tile
+          @x = units.tile-to-game(tile.col) - kCollisionX.right
+
+
+  update-y: (elapsed-time, map) ->
+    gravity = if @jump-active and @velocity-y < 0 then kJumpGravity else kGravity
+    @velocity-y = std.min @velocity-y + gravity * elapsed-time, kMaxSpeedY
+
+    Δy = @velocity-y * elapsed-time
+
+    # Falling
+    if Δy > 0
+      @on-wall-collision map, (@bottom-collision Δy), (tile) ->
+        if tile
+          @y = units.tile-to-game(tile.row) - kCollisionY.bottom
+          @velocity-y = 0
+          @on-ground = yes
+        else
+          @y += Δy
+          @on-ground = no
+
+      @on-wall-collision map, (@top-collision 0), (tile) ->
+        if tile
+          @y = units.tile-to-game(tile.row) + kCollisionY.h
+
+    # Jumping
+    else
+      @on-wall-collision map, (@top-collision Δy), (tile) ->
+        if tile
+          @y = units.tile-to-game(tile.row) + kCollisionY.h
+          @velocity-y = 0
+        else
+          @y += Δy
+          @on-ground = no
+
+      @on-wall-collision map, (@bottom-collision 0), (tile) ->
+        if tile
+          @y = units.tile-to-game(tile.row) - kCollisionY.bottom
+          @on-ground = yes
+
+  take-damage: (damage = 1) ->
+    unless @invincible-timer.is-active!
+      @health.take-damage damage
+      @velocity-y = std.min -kShortJumpSpeed, @velocity-y
+      @invincible = yes
+      @invincible-timer.reset!
+      @damage-text.set-damage damage
+
+  sprite-is-visible: ->
+    duty = @invincible-timer.current-time `std.div` kInvincibleFlashTime % 2 is 0
+    return not (@invincible-timer.is-active! and duty)
+
+
+  # Draw
 
   draw: (graphics) ->
-    @sprites[@get-sprite-state!].draw graphics, @x, @y
+    if @sprite-is-visible!
+      @sprites[@get-sprite-state!].draw graphics, @x, @y
+      @gun.draw graphics, @x, @y, @horizontal-facing, @vertical-facing
+    @damage-text.draw graphics, @center-x!, @center-y!
+
+  draw-hud: (graphics) ->
+    return unless @sprite-is-visible!
+    @health.draw graphics
+
+  get-sprite-state: ->
+    motion-type =
+      if @interacting
+        INTERACTING
+      else if @on-ground
+        if @acceleration-x is 0 then STANDING else WALKING
+      else
+        if @velocity-y < 0 then JUMPING else FALLING
+    key = SpriteState.key motion-type, @horizontal-facing, @vertical-facing
+    readout.update \spritestate, key
+    return key
+
+
+  # Collision spaces
+
+  left-collision: (Δ) -> # Δ <= 0
+    new Rect @x + kCollisionX.left + Δ, @y + kCollisionX.top,
+      kCollisionX.w/2 - Δ, kCollisionX.h
+
+  right-collision: (Δ) -> # Δ >= 0
+    new Rect @x + kCollisionX.left + kCollisionX.w/2,
+      @y + kCollisionX.top,
+      kCollisionX.w/2 + Δ, kCollisionX.h
+
+  top-collision: (Δ) ->
+    new Rect @x + kCollisionY.left, @y + kCollisionY.top + Δ,
+      kCollisionY.w, kCollisionY.h/2 - Δ
+
+  bottom-collision: (Δ) ->
+    new Rect @x + kCollisionY.left,
+      @y + kCollisionY.top + kCollisionY.h/2 + Δ
+      kCollisionY.w, kCollisionY.h/2 + Δ
+
+  damage-collision: ->
+    new Rect @x + kCollisionX.left, @y + kCollisionY.top,
+      kCollisionX.w, kCollisionY.h
+
+  on-wall-collision: (map, rect, λ) ->
+    for tile in map.get-colliding-tiles rect
+      if tile.type is WALL_TILE
+        return λ.call this, tile
+    λ.call this
+
+
+  # Button handlers
 
   start-moving-left: ->
     @horizontal-facing = LEFT
-    @acceleration-x = -kWalkingAcceleration
+    @acceleration-x = -1
+    @interacting = no
 
   start-moving-right: ->
     @horizontal-facing = RIGHT
-    @acceleration-x = kWalkingAcceleration
+    @acceleration-x = 1
+    @interacting = no
 
   stop-moving: ->
     @acceleration-x = 0
 
   start-jump: ->
-    if @on-ground
-      @jump.reset!
-      @velocity-y = -kJumpSpeed
-    else if @velocity-y < 0
-      @jump.reactivate!
+    @jump-active = yes
+    @interacting = no
+    @velocity-y = -kJumpSpeed if @on-ground
 
   stop-jump: ->
-    @jump.deactivate!
+    @jump-active = no
+
+  look-up: ->
+    @vertical-facing = UP
+    @interacting = no
+
+  look-down: ->
+    return if @vertical-facing is DOWN
+    @vertical-facing = DOWN
+    @interacting = @on-ground
+
+  look-horizontal: ->
+    @vertical-facing = HORIZONTAL
+
+
+  # Misc getter
+  center-x: -> @x + kHalfTile
+  center-y: -> @y + kHalfTile
 

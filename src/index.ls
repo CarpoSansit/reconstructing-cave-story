@@ -2,10 +2,14 @@
 # Reconstructing Cave Story (RCS)
 # Main program file
 
+# Require
 
-# Main: New instance of game class
-
+require! \./readout
 Game = require \./game
 
+
+# Main: Start game
+
+readout.install!
 Game.start!
 
