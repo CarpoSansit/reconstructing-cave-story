@@ -25,7 +25,6 @@ var bundler = browserify({
   debug: true,
   cache: {},
   packageCache: {},
-  fullPaths: true,
   entries: [ './src/index.ls' ],
   extensions: '.ls'
 });
