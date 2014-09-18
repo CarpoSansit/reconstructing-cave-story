@@ -40,36 +40,31 @@ export class Sprite
 export class AnimatedSprite extends Sprite
 
   # AnimatedSprite (Graphics, String, Pixel, Pixel, Pixel, Pixel, FSP, Number)
-  (graphics, path, source-x, source-y, @width, @height, @fps, @num-frames, stride-map) ->
+  (graphics, path, source-x, source-y, @width, @height, @fps, @keyframes) ->
 
     super ...
 
-    @frame-time    = 1000 / @fps
-    @current-frame = 0
-    @elapsed-time  = 0
-    @original-x    = @source-rect.x
+    @frame-time       = 1000 / @fps
+    @elapsed-time     = 0
+    @current-frame    = 0
+    @current-keyframe = @keyframes[0]
+    @origin-x         = @source-rect.x
 
-    @stride-map = if stride-map? then that else @stride-map = [ 0 til @num-frames ]
-
-    @do-log = path isnt 'data/16x16/Npc/NpcCemet.bmp'
-
-    std.log stride-map, @stride-map, @num-frames
+  # Sprite::draw (Graphics, GameUnit, GameUnit, Number)
+  draw: (graphics, x, y, frame-offset = @current-keyframe) ->
+    @source-rect.x = @origin-x + frame-offset * @source-rect.w
+    dest-rect = new SDL.Rect units.game-to-px(x), units.game-to-px(y), @width, @height
+    graphics.blit-surface @sprite-sheet, @source-rect, dest-rect
 
   # Update (ms)
   update: (elapsed-time) ->
     @elapsed-time += elapsed-time
 
     if @elapsed-time > @frame-time
-      @current-frame += 1
       @elapsed-time = 0
-
-      if @current-frame < @stride-map.length
-        @source-rect.x = @original-x + @stride-map[ @current-frame ] * @source-rect.w
-        if @do-log then std.log @current-frame, @stride-map[ @current-frame ], @source-rect.x
-      else
-        @source-rect.x = @original-x
-        @current-frame = 0
-        if @do-log then std.log @current-frame, @stride-map[ @current-frame ], @source-rect.x
+      @current-frame += 1
+      if @current-frame >= @keyframes.length then @current-frame = 0
+      @current-keyframe = @keyframes[ @current-frame ]
 
 
 # NumberSprite

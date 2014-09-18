@@ -30,7 +30,12 @@ kFallFrame      = 2
 kUpFrameOffset  = 3
 kDownFrame      = 6
 kBackFrame      = 7
+kNumWalkFrames  = 3
 kWalkFps        = 15
+
+kStrideMiddleFrameOffset = 0
+kStrideLeftFrameOffset   = 1
+kStrideRightFrameOffset  = 2
 
 # Physics constants
 kFriction            = 0.00049804687
@@ -52,6 +57,39 @@ kCollisionX = new Rect 6, 10, 20, 12
 kCollisionY = new Rect 10, 2, 12, 30
 
 
+# Private class: WalkingAnimation
+
+class WalkingAnimation
+
+  (@num-frames, @fps) ->
+    @frame-timer = new Timer 1000 / @fps
+    @forward     = true
+    @index       = 0
+
+  stride: ->
+    switch @index
+    | 0 => State.STRIDE_LEFT
+    | 1 => State.STRIDE_MIDDLE
+    | 2 => State.STRIDE_RIGHT
+    | _ => State.STRIDE_LEFT
+
+  update: ->
+    if @frame-timer.is-expired!
+      @frame-timer.reset!
+
+      if @forward
+        @index += 1
+        @forward = @index isnt @num-frames - 1
+      else
+        @index -= 1
+        @forward = @index is 0
+
+  reset: ->
+    @frame-timer.reset!
+    @index = 0
+    @forward = true
+
+
 # Player class
 
 export class Player
@@ -69,6 +107,9 @@ export class Player
     @on-ground         = no
     @jump-active       = no
     @interacting       = no
+
+    # Animation sync
+    @walk-animation = new WalkingAnimation kNumWalkFrames, kWalkFps
 
     # Timers
     @invincible-timer = new Timer kInvincibleTime
@@ -91,20 +132,23 @@ export class Player
         | state.JUMPING     => kJumpFrame
         | state.FALLING     => kFallFrame
         | state.INTERACTING => kBackFrame
-        | _ => void
+        | otherwise => void
 
       tile-x += if state.UP then kUpFrameOffset else 0
       tile-y = kCharacterFrame + if state.LEFT then 0 else 1
 
       if state.WALKING
-        new AnimatedSprite graphics, 'data/16x16/MyChar.bmp',
+        tile-x += switch true
+          | state.STRIDE_LEFT   => kStrideLeftFrameOffset
+          | state.STRIDE_RIGHT  => kStrideRightFrameOffset
+          | state.STRIDE_MIDDLE => kStrideMiddleFrameOffset
+          | otherwise => void
+        new Sprite graphics, 'data/16x16/MyChar.bmp',
           units.tile-to-px(tile-x), units.tile-to-px(tile-y),
-          units.tile-to-px(1), units.tile-to-px(1),
-          kWalkFps, 3, [ 0, 1, 0, 2 ]
+          units.tile-to-px(1), units.tile-to-px(1)
       else
         if state.DOWN and (state.JUMPING or state.FALLING)
-          source-x = kDownFrame
-
+          tile-x = kDownFrame
         new Sprite graphics, 'data/16x16/MyChar.bmp',
           units.tile-to-px(tile-x), units.tile-to-px(tile-y),
           units.tile-to-px(1), units.tile-to-px(1)
@@ -115,6 +159,7 @@ export class Player
     @update-x elapsed-time, map
     @update-y elapsed-time, map
     @damage-text.update elapsed-time
+    @walk-animation.update elapsed-time
 
   update-x: (elapsed-time, map) ->
     acc-x = if @on-ground then kWalkingAcceleration else kAirAcceleration
@@ -207,7 +252,7 @@ export class Player
     return not (@invincible-timer.is-active! and duty)
 
 
-  # Draw
+  # Drawing
 
   draw: (graphics) ->
     if @sprite-is-visible!
@@ -228,7 +273,8 @@ export class Player
         if @acceleration-x is 0 then State.STANDING else State.WALKING
       else
         if @velocity-y < 0 then State.JUMPING else State.FALLING
-    SpriteState.make @horizontal-facing, @vertical-facing, motion-type
+    SpriteState.make @horizontal-facing, @vertical-facing,
+      motion-type, @walk-animation.stride!
 
 
   # Collision spaces
@@ -265,11 +311,13 @@ export class Player
   # Button handlers
 
   start-moving-left: ->
+    if @on-ground and @acceleration-x is 0 then @walk-animation.reset!
     @horizontal-facing = State.LEFT
     @acceleration-x = -1
     @interacting = no
 
   start-moving-right: ->
+    if @on-ground and @acceleration-x is 0 then @walk-animation.reset!
     @horizontal-facing = State.RIGHT
     @acceleration-x = 1
     @interacting = no

@@ -96,7 +96,7 @@ event-loop = ->
   Δt = std.min SDL.get-ticks! - last-frame-time, kMaxFrameTime
 
   # Update and draw world
-  update Δt / 4
+  update Δt #/ 4
   draw!
 
   # Queue next frame

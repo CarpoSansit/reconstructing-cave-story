@@ -60,10 +60,14 @@ export class PolarStar
 
   update: (elapsed-time) ->
 
-  draw: (graphics, x, y, state) ->
+  draw: (graphics, x, y, state, walk-keyframe) ->
     x-offset = if state.LEFT then -kHalfTile else 0
     y-offset = if state.UP   then -kHalfTile / 2 else 0
     y-offset = if state.DOWN then  kHalfTile / 2 else 0
+
+    y-offset +=
+      if state.WALKING and (state.STRIDE_LEFT or state.STRIDE_RIGHT)
+        then -2 else 0
 
     @sprites[ state.key ].draw graphics, x + x-offset, y + y-offset
 

@@ -48,7 +48,7 @@ export class FirstCaveBat
     facing-offset = if facing is RIGHT then 1 else 0
     new AnimatedSprite graphics, 'data/16x16/Npc/NpcCemet.bmp',
       tile-to-px(2), tile-to-px(2 + facing-offset),
-      kTilePx, kTilePx, kFlyFps, kNumFlyFrames
+      kTilePx, kTilePx, kFlyFps, [ 0 til kNumFlyFrames ]
 
   initialise-sprites: (graphics, sprite-map = {}) ->
     for facing in [ LEFT, RIGHT ]
