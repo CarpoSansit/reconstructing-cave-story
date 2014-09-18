@@ -18,7 +18,7 @@ require! \./units
 
 
 # Assets
-kArmsSpritePath   = 'data/16x16/Arms.bmp'
+kArmsSpritePath   = \Arms
 
 # Spritestate tile offsets
 kSpriteWidth      = 1.5

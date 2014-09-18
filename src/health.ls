@@ -25,7 +25,7 @@ kMaxFillPx   = tile-to-px(2.5) - 1
 
 kDamageDelay = 1500
 
-kSpritePath  = 'data/16x16/TextBox.bmp'
+kSpritePath  = \TextBox
 
 # Health class
 

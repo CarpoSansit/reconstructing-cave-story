@@ -18,7 +18,7 @@ require! \./units
 { kScreenWidth, kScreenHeight } = config
 
 kTransparentColor  = [ 0, 0, 0 ]
-kScreenScaleFactor = 2
+kScreenScaleFactor = if config.kGraphicsQuality is 16 then 2 else 1
 
 
 # State
@@ -34,12 +34,12 @@ screen = SDL.set-video-mode(
 # Functions
 
 # Graphics::load-image (String, ?Bool)
-export load-image = (path, use-transparency = no) ->
-  if not spritesheets[path]?
-    spritesheets[path] = SDL.load-image path
-    if use-transparency then SDL.set-color-key spritesheets[path], kTransparentColor
-    if config.kDebugMode then document.body.append-child spritesheets[path].canvas
-  return spritesheets[path]
+export load-image = (filename, use-transparency = no) ->
+  if not spritesheets[filename]?
+    spritesheets[filename] = SDL.load-image config.find-asset filename
+    if use-transparency then SDL.set-color-key spritesheets[filename], kTransparentColor
+    if config.kDebugMode then document.body.append-child spritesheets[filename].canvas
+  return spritesheets[filename]
 
 # Graphics::blit-surface (SDL::Surface, SDL::Rect, SDL::Rect)
 export blit-surface = (source, src-rect, dest-rect) ->

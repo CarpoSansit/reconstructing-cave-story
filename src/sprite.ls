@@ -101,16 +101,16 @@ export class NumberSprite
     srcY = if @color is WHITE then kDigitSrcY else kDigitSrcY + game-to-px kHalfTile
 
     @glyphs = @digits.map ->
-      new Sprite graphics, 'data/16x16/TextBox.bmp',
+      new Sprite graphics, \TextBox,
         tile-to-px(0.5 * it), srcY, kDigitSrcWidth, kDigitSrcHeight
 
     # Add operators for damage/experience numbers
     if @op is PLUS
-      @glyphs.push new Sprite graphics, 'data/16x16/TextBox.bmp',
+      @glyphs.push new Sprite graphics, \TextBox,
         kOpPlusSrcX, kOpSrcY, kDigitSrcWidth, kDigitSrcHeight
 
     if @op is MINUS
-      @glyphs.push new Sprite graphics, 'data/16x16/TextBox.bmp',
+      @glyphs.push new Sprite graphics, \TextBox,
         kOpMinusSrcX, kOpSrcY, kDigitSrcWidth, kDigitSrcHeight
 
     @width  = kHalfTile * @glyphs.length

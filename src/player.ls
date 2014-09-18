@@ -145,11 +145,11 @@ export class Player
           | state.STRIDE_RIGHT  => kStrideRightFrameOffset
           | state.STRIDE_MIDDLE => kStrideMiddleFrameOffset
           | otherwise => void
-        new Sprite graphics, 'data/16x16/MyChar.bmp',
+        new Sprite graphics, \MyChar,
           units.tile-to-px(tile-x), units.tile-to-px(tile-y),
           units.tile-to-px(1), units.tile-to-px(1)
       else
-        new Sprite graphics, 'data/16x16/MyChar.bmp',
+        new Sprite graphics, \MyChar,
           units.tile-to-px(tile-x), units.tile-to-px(tile-y),
           units.tile-to-px(1), units.tile-to-px(1)
 

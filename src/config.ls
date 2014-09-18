@@ -22,5 +22,20 @@ export kMaxFrameTime = 5 * 1000 / kFps
 
 export kDebugMode = on
 
-export kGraphicsQuality = 16
+export kGraphicsQuality = 32
+
+
+# Asset paths
+
+switch kGraphicsQuality
+| 16 =>
+  export asset-path = 'data/16x16/'
+  export file-ext   = '.bmp'
+
+| 32 =>
+  export asset-path = 'data/32x32/'
+  export file-ext   = '.bmp'
+
+
+export find-asset = (asset-path +) . (+ file-ext)
 
