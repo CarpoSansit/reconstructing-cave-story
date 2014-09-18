@@ -103,7 +103,7 @@ export class Player
     @velocity-x        = 0
     @acceleration-x    = 0
     @horizontal-facing = State.LEFT
-    @vertical-facing   = State.HORIZONTAL
+    @intended-vertical-facing   = State.HORIZONTAL
     @on-ground         = no
     @jump-active       = no
     @interacting       = no
@@ -134,7 +134,9 @@ export class Player
         | state.INTERACTING => kBackFrame
         | otherwise => void
 
-      tile-x += if state.UP then kUpFrameOffset else 0
+      if state.UP   then tile-x += kUpFrameOffset
+      if state.DOWN then tile-x = kDownFrame
+
       tile-y = kCharacterFrame + if state.LEFT then 0 else 1
 
       if state.WALKING
@@ -147,8 +149,6 @@ export class Player
           units.tile-to-px(tile-x), units.tile-to-px(tile-y),
           units.tile-to-px(1), units.tile-to-px(1)
       else
-        if state.DOWN and (state.JUMPING or state.FALLING)
-          tile-x = kDownFrame
         new Sprite graphics, 'data/16x16/MyChar.bmp',
           units.tile-to-px(tile-x), units.tile-to-px(tile-y),
           units.tile-to-px(1), units.tile-to-px(1)
@@ -273,7 +273,7 @@ export class Player
         if @acceleration-x is 0 then State.STANDING else State.WALKING
       else
         if @velocity-y < 0 then State.JUMPING else State.FALLING
-    SpriteState.make @horizontal-facing, @vertical-facing,
+    SpriteState.make @horizontal-facing, @vertical-facing!,
       motion-type, @walk-animation.stride!
 
 
@@ -334,19 +334,25 @@ export class Player
     @jump-active = no
 
   look-up: ->
-    @vertical-facing = State.UP
+    @intended-vertical-facing = State.UP
     @interacting = no
 
   look-down: ->
-    return if @vertical-facing is State.DOWN
-    @vertical-facing = State.DOWN
+    return if @intended-vertical-facing is State.DOWN
+    @intended-vertical-facing = State.DOWN
     @interacting = @on-ground
 
   look-horizontal: ->
-    @vertical-facing = State.HORIZONTAL
+    @intended-vertical-facing = State.HORIZONTAL
 
 
-  # Misc getter
+  # Misc getters
   center-x: -> @x + kHalfTile
   center-y: -> @y + kHalfTile
+
+  vertical-facing: ->
+    if @on-ground and @intended-vertical-facing is State.DOWN
+      State.HORIZONTAL
+    else
+      @intended-vertical-facing
 
