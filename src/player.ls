@@ -100,7 +100,7 @@ export class Player
         new AnimatedSprite graphics, 'data/16x16/MyChar.bmp',
           units.tile-to-px(tile-x), units.tile-to-px(tile-y),
           units.tile-to-px(1), units.tile-to-px(1),
-          kWalkFps, 3
+          kWalkFps, 3, [ 0, 1, 0, 2 ]
       else
         if state.DOWN and (state.JUMPING or state.FALLING)
           source-x = kDownFrame

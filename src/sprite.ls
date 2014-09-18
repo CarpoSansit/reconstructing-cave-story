@@ -40,13 +40,20 @@ export class Sprite
 export class AnimatedSprite extends Sprite
 
   # AnimatedSprite (Graphics, String, Pixel, Pixel, Pixel, Pixel, FSP, Number)
-  (graphics, path, source-x, source-y, @width, @height, @fps, @num-frames) ->
+  (graphics, path, source-x, source-y, @width, @height, @fps, @num-frames, stride-map) ->
 
     super ...
 
     @frame-time    = 1000 / @fps
     @current-frame = 0
     @elapsed-time  = 0
+    @original-x    = @source-rect.x
+
+    @stride-map = if stride-map? then that else @stride-map = [ 0 til @num-frames ]
+
+    @do-log = path isnt 'data/16x16/Npc/NpcCemet.bmp'
+
+    std.log stride-map, @stride-map, @num-frames
 
   # Update (ms)
   update: (elapsed-time) ->
@@ -56,11 +63,13 @@ export class AnimatedSprite extends Sprite
       @current-frame += 1
       @elapsed-time = 0
 
-      if @current-frame < @num-frames
-        @source-rect.x += @source-rect.w
+      if @current-frame < @stride-map.length
+        @source-rect.x = @original-x + @stride-map[ @current-frame ] * @source-rect.w
+        if @do-log then std.log @current-frame, @stride-map[ @current-frame ], @source-rect.x
       else
-        @source-rect.x -= @source-rect.w * (@num-frames - 1)
+        @source-rect.x = @original-x
         @current-frame = 0
+        if @do-log then std.log @current-frame, @stride-map[ @current-frame ], @source-rect.x
 
 
 # NumberSprite
