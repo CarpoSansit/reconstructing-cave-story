@@ -333,6 +333,12 @@ export class Player
   stop-jump: ->
     @jump-active = no
 
+  start-fire: ->
+    @gun.start-fire @get-sprite-state!, @x, @y
+
+  stop-fire: ->
+    @gun.stop-fire!
+
   look-up: ->
     @intended-vertical-facing = State.UP
     @interacting = no

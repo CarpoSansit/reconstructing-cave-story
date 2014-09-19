@@ -80,6 +80,12 @@ event-loop = ->
   else if input.was-key-released SDL.KEY.Z
     player.stop-jump!
 
+  # Shooting
+  if input.was-key-pressed SDL.KEY.X
+    player.start-fire!
+  else if input.was-key-released SDL.KEY.X
+    player.stop-fire!
+
   # Looking
   if (input.is-key-held SDL.KEY.UP) and (input.is-key-held SDL.KEY.DOWN)
     player.look-horizontal!

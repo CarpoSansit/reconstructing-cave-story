@@ -11,8 +11,8 @@ require! \./units
 
 { kHalfTile, tile-to-px, tile-to-game, game-to-px } = units
 
-{ Sprite }      = require \./sprite
-{ SpriteState } = require \./spritestate
+{ Sprite }             = require \./sprite
+{ SpriteState, State } = require \./spritestate
 
 { LEFT, RIGHT, UP, DOWN, HORIZONTAL } = require \./spritestate
 
@@ -32,6 +32,11 @@ kLeftOffset       = 0
 # Weapon tile offsets
 kPolarStarIndex = 2
 
+# Projectile sprite tiles
+kProjectileSourceY         = 2
+kHorizProjectileSourceX    = 8
+kVerticalProjectileSourceX = 9
+
 # Projectile nozzle offsets (game units)
 kNozzleHorizY      = 23
 kNozzleHorizLeftX  = 10
@@ -45,29 +50,36 @@ kNozzleDownY      = 28
 kNozzleDownLeftX  = 29
 kNozzleDownRightX = 19
 
-# Projectile sprite tiles
-kProjectileSourceY = 2
-kHorizProjectileSourceX = 8
-kVerticalProjectileSourceX = 9
+
+# Private Class: Projectile
+
+class Projectile
+  (@sprite, @state, @x, @y) ->
+    @offset = 0
+
+  update: (elapsed-time) ->
+
+  draw: (graphics) ->
+    @sprite.draw graphics, @x, @y
 
 
 # Arms abstract class
 #
 # Not currently needed
 
-
 # Polar Star
 
 export class PolarStar
 
   (graphics) ->
+    @projectile = null
     @sprites = @initialise-sprites graphics
 
-    @horizontal-projectile = new Sprite graphics, \bullet,
+    @hp-sprite = new Sprite graphics, \bullet,
       tile-to-px(kHorizProjectileSourceX), tile-to-px(kProjectileSourceY),
       tile-to-px(1), tile-to-px(1)
 
-    @vertical-projectile = new Sprite graphics, \bullet,
+    @vp-sprite = new Sprite graphics, \bullet,
       tile-to-px(kVerticalProjectileSourceX), tile-to-px(kProjectileSourceY),
       tile-to-px(1), tile-to-px(1)
 
@@ -84,46 +96,55 @@ export class PolarStar
         tile-to-px(kPolarStarIndex * kSpriteWidth), tile-to-px(tile-y),
         tile-to-px(kSpriteWidth), tile-to-px(kSpriteHeight)
 
-  update: (elapsed-time) ->
-
-  draw: (graphics, x, y, state, walk-keyframe) ->
-    x-offset = if state.LEFT then -kHalfTile else 0
-    y-offset = if state.UP   then -kHalfTile / 2 else 0
-    y-offset = if state.DOWN then  kHalfTile / 2 else 0
-
-    y-offset +=
-      if state.WALKING and (state.STRIDE_LEFT or state.STRIDE_RIGHT)
-        then -2 else 0
-
-    @sprites[ state.key ].draw graphics, x + x-offset, y + y-offset
-
-    bullet-y = y - kHalfTile + y-offset
-    bullet-x = x - kHalfTile + x-offset
+  start-fire: (state, player-x, player-y) ->
+    bullet-x = (@gun-x state, player-x) - kHalfTile
+    bullet-y = (@gun-y state, player-y) - kHalfTile
 
     switch true
     | state.HORIZONTAL =>
       bullet-y += kNozzleHorizY
-      if state.LEFT =>
-        bullet-x += kNozzleHorizLeftX
-      else
-        bullet-x += kNozzleHorizRightX
+      bullet-x += if state.LEFT then kNozzleHorizLeftX else kNozzleHorizRightX
 
     | state.UP =>
       bullet-y += kNozzleUpY
-      if state.LEFT =>
-        bullet-x += kNozzleUpLeftX
-      else
-        bullet-x += kNozzleUpRightX
+      bullet-x += if state.LEFT then kNozzleUpLeftX    else kNozzleUpRightX
 
     | state.DOWN =>
       bullet-y += kNozzleDownY
-      if state.LEFT =>
-        bullet-x += kNozzleDownLeftX
-      else
-        bullet-x += kNozzleDownRightX
+      bullet-x += if state.LEFT then kNozzleDownLeftX  else kNozzleDownRightX
 
-    if state.HORIZONTAL
-      @horizontal-projectile.draw graphics, bullet-x, bullet-y
-    else
-      @vertical-projectile.draw   graphics, bullet-x, bullet-y
+    @projectile =
+      new Projectile (if state.HORIZONTAL then @hp-sprite else @vp-sprite),
+        state, bullet-x, bullet-y
+
+  stop-fire: ->
+    @projectile = null
+
+
+  # Coordinates getters
+
+  gun-x: (state, player-x) ->
+    if state.LEFT then player-x - kHalfTile else player-x
+
+  gun-y: (state, player-y) ->
+    if state.UP   then player-y -= kHalfTile / 2
+    if state.DOWN then player-y += kHalfTile / 2
+    player-y + @gun-bob state
+
+  gun-bob: (state) ->
+    if state.WALKING and (state.STRIDE_LEFT or state.STRIDE_RIGHT) then -2 else 0
+
+
+  # Update methods
+
+  update: (elapsed-time) ->
+    @projectile?.update elapsed-time
+
+  draw: (graphics, player-x, player-y, state) ->
+    gun-x = @gun-x state, player-x
+    gun-y = @gun-y state, player-y
+
+    @sprites[ state.key ].draw graphics, gun-x, gun-y
+
+    @projectile?.draw graphics
 
