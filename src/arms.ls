@@ -32,6 +32,24 @@ kLeftOffset       = 0
 # Weapon tile offsets
 kPolarStarIndex = 2
 
+# Projectile nozzle offsets (game units)
+kNozzleHorizY      = 23
+kNozzleHorizLeftX  = 10
+kNozzleHorizRightX = 38
+
+kNozzleUpY      = 4
+kNozzleUpLeftX  = 27
+kNozzleUpRightX = 21
+
+kNozzleDownY      = 28
+kNozzleDownLeftX  = 29
+kNozzleDownRightX = 19
+
+# Projectile sprite tiles
+kProjectileSourceY = 2
+kHorizProjectileSourceX = 8
+kVerticalProjectileSourceX = 9
+
 
 # Arms abstract class
 #
@@ -44,6 +62,14 @@ export class PolarStar
 
   (graphics) ->
     @sprites = @initialise-sprites graphics
+
+    @horizontal-projectile = new Sprite graphics, \bullet,
+      tile-to-px(kHorizProjectileSourceX), tile-to-px(kProjectileSourceY),
+      tile-to-px(1), tile-to-px(1)
+
+    @vertical-projectile = new Sprite graphics, \bullet,
+      tile-to-px(kVerticalProjectileSourceX), tile-to-px(kProjectileSourceY),
+      tile-to-px(1), tile-to-px(1)
 
   initialise-sprites: (graphics) ->
     SpriteState.generate-with (state) ->
@@ -71,4 +97,33 @@ export class PolarStar
 
     @sprites[ state.key ].draw graphics, x + x-offset, y + y-offset
 
+    bullet-y = y - kHalfTile + y-offset
+    bullet-x = x - kHalfTile + x-offset
+
+    switch true
+    | state.HORIZONTAL =>
+      bullet-y += kNozzleHorizY
+      if state.LEFT =>
+        bullet-x += kNozzleHorizLeftX
+      else
+        bullet-x += kNozzleHorizRightX
+
+    | state.UP =>
+      bullet-y += kNozzleUpY
+      if state.LEFT =>
+        bullet-x += kNozzleUpLeftX
+      else
+        bullet-x += kNozzleUpRightX
+
+    | state.DOWN =>
+      bullet-y += kNozzleDownY
+      if state.LEFT =>
+        bullet-x += kNozzleDownLeftX
+      else
+        bullet-x += kNozzleDownRightX
+
+    if state.HORIZONTAL
+      @horizontal-projectile.draw graphics, bullet-x, bullet-y
+    else
+      @vertical-projectile.draw   graphics, bullet-x, bullet-y
 
