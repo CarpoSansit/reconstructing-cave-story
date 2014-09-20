@@ -37,3 +37,22 @@ To run it, go to project directory and run `gulp`. This will start a server on
 the game. Changes to the source files will be reflected immediately in the
 browser.
 
+# Departure of style
+
+There are a few scenarios where I've chosen a slightly different implementation
+style to take advantage of some JS features. For example, where the C++ version
+would have `getX()` or `getY()` containing a switch, I usually opt for dynamic
+getter generation in the contructor, like this:
+
+    Object.define-properties this, do
+      x: get:
+        switch ...
+        ...
+
+      y: get:
+        switch ...
+        ...
+
+In C++ the compiler optimises having to resolve those switches every frame, but
+in JS, this way we simplify the getters and provide JIT hints for efficiency.
+

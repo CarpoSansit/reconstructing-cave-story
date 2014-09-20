@@ -10,6 +10,7 @@ require! \./units
 { div } = std
 { kHalfTile, tile-to-px, game-to-px } = units
 
+{ Timer } = require \./timer
 { Rectangle: Rect } = require \./rectangle
 
 
@@ -44,8 +45,7 @@ export class AnimatedSprite extends Sprite
 
     super ...
 
-    @frame-time       = 1000 / @fps
-    @elapsed-time     = 0
+    @frame-timer      = new Timer 1000 / @fps
     @current-frame    = 0
     @current-keyframe = @keyframes[0]
     @origin-x         = @source-rect.x
@@ -57,11 +57,9 @@ export class AnimatedSprite extends Sprite
     graphics.blit-surface @sprite-sheet, @source-rect, dest-rect
 
   # Update (ms)
-  update: (elapsed-time) ->
-    @elapsed-time += elapsed-time
-
-    if @elapsed-time > @frame-time
-      @elapsed-time = 0
+  update: ->
+    if @frame-timer.is-expired!
+      @frame-timer.reset!
       @current-frame += 1
       if @current-frame >= @keyframes.length then @current-frame = 0
       @current-keyframe = @keyframes[ @current-frame ]

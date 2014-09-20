@@ -156,6 +156,7 @@ export class Player
   update: (elapsed-time, map) ->
     @sprites[@get-sprite-state!key].update elapsed-time
     @health.update elapsed-time
+    @gun.update-projectiles elapsed-time, map
     @update-x elapsed-time, map
     @update-y elapsed-time, map
     @damage-text.update elapsed-time

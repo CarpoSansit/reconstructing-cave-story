@@ -39,10 +39,10 @@ module.exports = class Map
     @tiles    = Map.create-matrix (new Tile), 20, 15
     @bg-tiles = Map.create-matrix null, 20, 15
 
-  update: (elapsed-time) ->
-    for row in @tiles
-      for tile in row
-        tile.sprite?.update elapsed-time
+  #update: (elapsed-time) ->
+  #  for row in @tiles
+  #    for tile in row
+  #      tile.sprite?.update elapsed-time
 
   draw: (graphics) ->
     for row, y in @tiles

@@ -36,6 +36,8 @@ running  = yes
 player   = null
 bat      = null
 map      = null
+
+time-factor      = 1
 last-frame-time  = 0
 any-keys-pressed = no
 
@@ -96,13 +98,23 @@ event-loop = ->
   else
     player.look-horizontal!
 
+  # Debug functions
+  if input.was-key-pressed SDL.KEY.ONE
+    time-factor := 1
+  if input.was-key-pressed SDL.KEY.TWO
+    time-factor := 2
+  if input.was-key-pressed SDL.KEY.THREE
+    time-factor := 3
+  if input.was-key-pressed SDL.KEY.FOUR
+    time-factor := 4
+
   # Measure time since last frame. If it's longer than the max skippable
   # frames, use that instead to stop the player falling out of the world
   # and causing errors.
   Δt = std.min SDL.get-ticks! - last-frame-time, kMaxFrameTime
 
   # Update and draw world
-  update Δt #/ 4
+  update Δt / time-factor
   draw!
 
   # Queue next frame

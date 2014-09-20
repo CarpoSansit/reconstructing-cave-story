@@ -18,6 +18,15 @@ export KEYCODES =
   UP     : 38
   RIGHT  : 39
   DOWN   : 40
+  ONE    : 49
+  TWO    : 50
+  THREE  : 51
+  FOUR   : 52
+  FIVE   : 53
+  SIX    : 54
+  SEVEN  : 55
+  EIGHT  : 56
+  NINE   : 57
   A      : 65
   Q      : 81
   S      : 83
@@ -31,7 +40,11 @@ monitor-keys = ->
   document.add-event-listener \keydown, ({ which }:event) ->
     #std.info which
     queue.push-event { type: KEYDOWN, key: which }
-    event.prevent-default!
+    if which is KEYCODES.UP or
+       which is KEYCODES.DOWN or
+       which is KEYCODES.LEFT or
+       which is KEYCODES.RIGHT
+      event.prevent-default!
 
   document.add-event-listener \keyup, ({ which }:event) ->
     queue.push-event { type: KEYUP, key: which }
