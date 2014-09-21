@@ -23,6 +23,7 @@ Map    = require \./map
 { Rectangle }     = require \./rectangle
 { FirstCaveBat }  = require \./first-cave-bat
 { FixedBackdrop } = require \./backdrop
+{ DamageTexts }   = require \./damage-texts
 
 
 # Reference constants
@@ -58,10 +59,6 @@ event-loop = ->
     | SDL.KEYDOWN => input.key-down-event event
     | SDL.KEYUP   => input.key-up-event   event
     | otherwise   => throw new Error message: "Unknown event type: " + event
-
-
-  # Interrogate key state
-
   # Escape to quit
   if input.was-key-pressed SDL.KEY.ESCAPE
     running := no
@@ -99,14 +96,10 @@ event-loop = ->
     player.look-horizontal!
 
   # Debug functions
-  if input.was-key-pressed SDL.KEY.ONE
-    time-factor := 1
-  if input.was-key-pressed SDL.KEY.TWO
-    time-factor := 2
-  if input.was-key-pressed SDL.KEY.THREE
-    time-factor := 3
-  if input.was-key-pressed SDL.KEY.FOUR
-    time-factor := 4
+  if input.was-key-pressed SDL.KEY.ONE   then time-factor := 1
+  if input.was-key-pressed SDL.KEY.TWO   then time-factor := 2
+  if input.was-key-pressed SDL.KEY.THREE then time-factor := 3
+  if input.was-key-pressed SDL.KEY.FOUR  then time-factor := 4
 
   # Measure time since last frame. If it's longer than the max skippable
   # frames, use that instead to stop the player falling out of the world
@@ -148,10 +141,12 @@ update = (elapsed-time) ->
 
   # Enemy-to-player collisions
   if bat.damage-collision!.collides-with player.damage-collision!
-    readout.update \collided, true
     player.take-damage bat.contact-damage
-  else
-    readout.update \collided, false
+
+  # This goes last, because if collisions have caused damage, damagetexts
+  # will suddenly exist which have not been updated, and will be drawn one
+  # frame in their last known position
+  DamageTexts.update elapsed-time
 
 # Game::draw
 draw = ->
@@ -161,6 +156,7 @@ draw = ->
   player.draw graphics
   map.draw graphics
   player.draw-hud graphics
+  DamageTexts.draw graphics
 
 # Game::create-test-world
 create-test-world = ->
@@ -176,15 +172,12 @@ export start = ->
   readout.add-reader \frametime, 'Frame time'
   readout.add-reader \drawtime, 'Draw time'
   readout.add-reader \willstop, 'Will stop', true
-  readout.add-reader \collided, 'Collision?', false
 
   # Create game world
   create-test-world!
 
   # Begin game loop
   event-loop!
-
-  player.start-moving-left!
 
   # TESTING: Don't let the game loop run too long
   std.delay 5000, ->

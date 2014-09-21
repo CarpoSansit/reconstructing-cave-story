@@ -5,9 +5,13 @@
 
 require! \std
 require! \./units
+require! \./config
 
 { tile-to-px, tile-to-game, kHalfTile, kTilePx } = units
 
+{ Damageable }             = require \./damageable
+{ DamageText }             = require \./damage-text
+{ DamageTexts }            = require \./damage-texts
 { Rectangle: Rect }        = require \./rectangle
 { Sprite, AnimatedSprite } = require \./sprite
 
@@ -30,18 +34,22 @@ SpriteState = (...args) -> String args.join '-'
 
 # Bat Class
 
-export class FirstCaveBat
+export class FirstCaveBat extends Damageable
 
   # FirstCaveBat (Game, Game)
-  (graphics, @x, @center-y) ->
-    @y = @center-y
+  (graphics, @x, @flight-center-y) ->
+    @y = @flight-center-y
     @flight-angle = 0
     @angular-velocity = kAngularVelocity
     @horizontal-facing = RIGHT
     @sprites = @initialise-sprites graphics
+    @damage-text = new DamageText graphics
     @contact-damage = kContactDamage
+    @center-x = @x + kHalfTile
+    @center-y = @y + kHalfTile
+    DamageTexts.add-damageable this
 
-  get-sprite-state: ->
+  spritestate:~ ->
     SpriteState @horizontal-facing
 
   initialise-sprite: (graphics, facing) ->
@@ -58,19 +66,26 @@ export class FirstCaveBat
   update: (elapsed-time, player-x) ->
     @horizontal-facing = if player-x < @x then LEFT else RIGHT
     @flight-angle += @angular-velocity * elapsed-time
-    @y = @center-y + units.tile-to-game(5) / 2 * std.sin units.deg-to-rad @flight-angle
-    @sprites[@get-sprite-state!].update elapsed-time
+    @y = @flight-center-y + units.tile-to-game(5) / 2 * std.sin units.deg-to-rad @flight-angle
+    @sprites[@spritestate].update elapsed-time
 
   draw: (graphics) ->
-    #graphics.visualiseRect @damage-collision!, yes
-    @sprites[@get-sprite-state!].draw graphics, @x, @y
+    if config.show-collisions
+      graphics.visualiseRect @collision-rectangle!
+    @sprites[@spritestate].draw graphics, @x, @y
 
   damage-collision: ->
-    new Rect @x + kHalfTile, @y + kHalfTile, 1, 1
+    new Rect @center-x, @center-y, 1, 1
 
   collision-rectangle: ->
-    new Rect @x + kHalfTile, @y + kHalfTile, tile-to-game(1), tile-to-game(1)
+    new Rect @x, @y, tile-to-game(1), tile-to-game(1)
 
   take-damage: (damage) ->
     std.log 'FirstCaveBat::takeDamage -', damage
+    @damage-text.set-damage damage
+
+  # Damageable
+  center-x:~ -> @x + kHalfTile
+  center-y:~ -> @y + kHalfTile
+  get-damage-text: -> @damage-text
 

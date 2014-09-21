@@ -13,16 +13,19 @@
 # module scope. Unlike C++, where the compiler makes everything available up
 # front, we have to plan for run-time.
 
-
 export kScreenWidth  = 20  # Tiles
 export kScreenHeight = 15  # Tiles
 
 export kFps          = 60
 export kMaxFrameTime = 5 * 1000 / kFps
 
-export kDebugMode = on
-
 export kGraphicsQuality = 32
+
+
+# Debug Flags
+
+export kDebugMode = on
+export show-collisions   = yes
 
 
 # Asset paths
@@ -35,7 +38,6 @@ switch kGraphicsQuality
 | 32 =>
   export asset-path = 'data/32x32/'
   export file-ext   = '.bmp'
-
 
 export find-asset = (asset-path +) . (+ file-ext)
 

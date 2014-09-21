@@ -3,7 +3,6 @@
 # Floating Damage Text
 #
 
-
 require! \std
 require! \./units
 
@@ -18,19 +17,34 @@ kVanishTime = 2000
 
 export class DamageText
 
-  (graphics, @x, @y) ->
-    @timer = new Timer kVanishTime
-    @damage   = 0
-    @offset-y = 0
+  (graphics, @center-x, @center-y) ->
+    @timer       = new Timer kVanishTime
+    @damage      = 0
+    @offset-y    = 0
+    @should-rise = no
 
-  set-damage: (@damage) ->
+  set-position: (x, y) ->
+    @center-x = x
+    @center-y = y + @offset-y
+
+  set-damage: (damage) ->
+    @should-rise = @damage is 0
+    if @should-rise then @offset-y = 0
+    @damage += damage
     @timer.reset!
-    @offset-y = 0
 
   update: (elapsed-time) ->
-    @offset-y = std.max units.tile-to-game(-1), @offset-y + kVelocity * elapsed-time
+    if @timer.is-expired
+      @damage = 0
 
-  draw: (graphics, x, y) ->
-    if @timer.is-active!
-      (new NumberSprite.DamageNumber graphics, @damage).draw-centered graphics, x, y + @offset-y
+    if @should-rise
+      @offset-y = std.max units.tile-to-game(-1), @offset-y + kVelocity * elapsed-time
+
+  draw: (graphics) ->
+    if @timer.is-active and @damage > 0
+      (new NumberSprite.DamageNumber graphics, @damage).draw-centered graphics,
+        @center-x, @center-y
+
+  expired:~ ->
+    @timer.is-expired
 

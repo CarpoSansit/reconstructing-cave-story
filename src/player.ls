@@ -10,16 +10,17 @@ require! \./readout
 
 { kHalfTile, tile-to-game, tile-to-px } = units
 
-{ SpriteState, State } = require \./spritestate
-
 { WALL_TILE }       = require \./map
 { Rectangle: Rect } = require \./rectangle
 { Timer }           = require \./timer
 { Health }          = require \./health
+{ Damageable }      = require \./damageable
 { DamageText }      = require \./damage-text
+{ DamageTexts }     = require \./damage-texts
 { PolarStar }       = require \./arms
-{ Sprite, AnimatedSprite, NumberSprite } = require \./sprite
 
+{ SpriteState, State } = require \./spritestate
+{ Sprite, AnimatedSprite, NumberSprite } = require \./sprite
 
 # Animation constants
 kCharacterFrame = 0
@@ -74,7 +75,7 @@ class WalkingAnimation
     | _ => State.STRIDE_LEFT
 
   update: ->
-    if @frame-timer.is-expired!
+    if @frame-timer.is-expired
       @frame-timer.reset!
 
       if @forward
@@ -92,7 +93,7 @@ class WalkingAnimation
 
 # Player class
 
-export class Player
+export class Player extends Damageable
 
   # Player (Game, Game) - Initial position - constructor
 
@@ -120,6 +121,8 @@ export class Player
     # Sprites
     @sprites = @initialise-sprites graphics
     @damage-text = new DamageText graphics
+
+    DamageTexts.add-damageable this
 
     # Items
     @gun = new PolarStar graphics
@@ -159,7 +162,6 @@ export class Player
     @gun.update-projectiles elapsed-time, map
     @update-x elapsed-time, map
     @update-y elapsed-time, map
-    @damage-text.update elapsed-time
     @walk-animation.update elapsed-time
 
   update-x: (elapsed-time, map) ->
@@ -241,7 +243,7 @@ export class Player
           @on-ground = yes
 
   take-damage: (damage = 1) ->
-    unless @invincible-timer.is-active!
+    unless @invincible-timer.is-active
       @health.take-damage damage
       @velocity-y = std.min -kShortJumpSpeed, @velocity-y
       @invincible = yes
@@ -250,17 +252,18 @@ export class Player
 
   sprite-is-visible: ->
     duty = @invincible-timer.current-time `std.div` kInvincibleFlashTime % 2 is 0
-    return not (@invincible-timer.is-active! and duty)
+    return not (@invincible-timer.is-active and duty)
 
 
   # Drawing
 
   draw: (graphics) ->
+    if config.show-collisions
+      graphics.visualise-rect @damage-collision!
     if @sprite-is-visible!
       state = @get-sprite-state!
       @gun.draw graphics, @x, @y, state
       @sprites[state.key].draw graphics, @x, @y
-    @damage-text.draw graphics, @center-x!, @center-y!
 
   draw-hud: (graphics) ->
     return unless @sprite-is-visible!
@@ -353,10 +356,12 @@ export class Player
     @intended-vertical-facing = State.HORIZONTAL
 
 
-  # Misc getters
-  center-x: -> @x + kHalfTile
-  center-y: -> @y + kHalfTile
+  # Damageable getters
+  center-x:~ -> @x + kHalfTile
+  center-y:~ -> @y + kHalfTile
+  get-damage-text: -> @damage-text
 
+  # Misc getters
   get-projectiles: ->
     @gun.get-projectiles!
 

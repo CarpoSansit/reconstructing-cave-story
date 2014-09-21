@@ -23,8 +23,11 @@ export class Timer
   reset: ->
     @current-time = 0
 
-  is-active: -> @current-time < @expiration-time
-  is-expired: -> not @is-active!
+  is-active:~ ->
+    @current-time < @expiration-time
+
+  is-expired:~ ->
+    not @is-active
 
   @update-all = (elapsed-time) ->
     all-timers.map (.update elapsed-time)

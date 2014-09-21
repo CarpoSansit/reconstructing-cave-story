@@ -57,7 +57,7 @@ export class Health
 
   # Health::update (ms)
   update: (elapsed-time) ->
-    if @damage > 0 and @damage-timer.is-expired!
+    if @damage > 0 and @damage-timer.is-expired
       @current-health = std.max 0, @current-health - @damage
       @damage = 0
 

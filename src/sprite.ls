@@ -58,7 +58,7 @@ export class AnimatedSprite extends Sprite
 
   # Update (ms)
   update: ->
-    if @frame-timer.is-expired!
+    if @frame-timer.is-expired
       @frame-timer.reset!
       @current-frame += 1
       if @current-frame >= @keyframes.length then @current-frame = 0

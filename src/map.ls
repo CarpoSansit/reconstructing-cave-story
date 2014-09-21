@@ -105,27 +105,17 @@ module.exports = class Map
     map.tiles[8][3]  = tile
     map.tiles[7][2]  = tile
     map.tiles[10][3] = tile
+    map.tiles[10][0] = tile
 
     # Background tiles
-
     chain-top = new Sprite graphics, fg-path, tile-to-px(11), tile-to-px(2), tile-to-px(1), tile-to-px(1)
     chain-mid = new Sprite graphics, fg-path, tile-to-px(12), tile-to-px(2), tile-to-px(1), tile-to-px(1)
     chain-btm = new Sprite graphics, fg-path, tile-to-px(13), tile-to-px(2), tile-to-px(1), tile-to-px(1)
-
     map.bg-tiles[8][2] = chain-top
     map.bg-tiles[9][2] = chain-mid
     map.bg-tiles[10][2] = chain-btm
 
-    #gate-a = new Sprite graphics, fg-path, tile-to-px(8), tile-to-px(9), tile-to-px(1), tile-to-px(1)
-    #gate-b = new Sprite graphics, fg-path, tile-to-px(9), tile-to-px(9), tile-to-px(1), tile-to-px(1)
-    #gate-c = new Sprite graphics, fg-path, tile-to-px(8), tile-to-px(10), tile-to-px(1), tile-to-px(1)
-    #gate-d = new Sprite graphics, fg-path, tile-to-px(9), tile-to-px(10), tile-to-px(1), tile-to-px(1)
-
-    #map.bg-tiles[9][15]  = gate-a
-    #map.bg-tiles[9][16]  = gate-b
-    #map.bg-tiles[10][15] = gate-c
-    #map.bg-tiles[10][16] = gate-d
-
+    # Done
     return map
 
   @create-matrix = (value, cols, rows) ->
