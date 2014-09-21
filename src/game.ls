@@ -140,6 +140,13 @@ update = (elapsed-time) ->
   player.update elapsed-time, map
   bat.update elapsed-time, player.x
 
+  # Bullet-to-enemy collisions
+  for projectile in player.get-projectiles!
+    if bat.collision-rectangle!collides-with projectile.collision-rectangle!
+      projectile.collide-with-enemy!
+      bat.take-damage projectile.contact-damage
+
+  # Enemy-to-player collisions
   if bat.damage-collision!.collides-with player.damage-collision!
     readout.update \collided, true
     player.take-damage bat.contact-damage

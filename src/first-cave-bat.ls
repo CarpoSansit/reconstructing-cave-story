@@ -68,3 +68,9 @@ export class FirstCaveBat
   damage-collision: ->
     new Rect @x + kHalfTile, @y + kHalfTile, 1, 1
 
+  collision-rectangle: ->
+    new Rect @x + kHalfTile, @y + kHalfTile, tile-to-game(1), tile-to-game(1)
+
+  take-damage: (damage) ->
+    std.log 'FirstCaveBat::takeDamage -', damage
+

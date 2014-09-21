@@ -357,6 +357,9 @@ export class Player
   center-x: -> @x + kHalfTile
   center-y: -> @y + kHalfTile
 
+  get-projectiles: ->
+    @gun.get-projectiles!
+
   vertical-facing: ->
     if @on-ground and @intended-vertical-facing is State.DOWN
       State.HORIZONTAL

@@ -15,6 +15,7 @@ require! \./units
 { Sprite }             = require \./sprite
 { Rectangle: Rect }    = require \./rectangle
 { SpriteState, State } = require \./spritestate
+{ Projectile }         = require \./projectile
 
 
 # Assets
@@ -59,10 +60,13 @@ kL1CollisionHeight = 4
 
 # Private Class: Projectile
 
-class Projectile
+class PolarStarProjectile extends Projectile
   (@sprite, state, x, y) ->
+    super 1
+
     @offset   = 0
     @lifespan = kL1Lifespan
+    @alive    = yes
 
     std.log 'SFX: Blam!'
 
@@ -97,12 +101,14 @@ class Projectile
     for tile in map.get-colliding-tiles @collision-rectangle!
       if tile.type is WALL_TILE
         return false
-    return @offset < @lifespan
+    return @alive and @offset < @lifespan
 
   draw: (graphics) ->
     @sprite.draw graphics, @x, @y
     #graphics.visualiseRect @collision-rectangle!
 
+  collide-with-enemy: ->
+    @alive = false
 
 # Arms abstract class
 #
@@ -162,16 +168,15 @@ export class PolarStar
     # Use next available projectile
     if not @projectile-a
       @projectile-a =
-        new Projectile (if state.HORIZONTAL then @hp-sprite else @vp-sprite),
+        new PolarStarProjectile (if state.HORIZONTAL then @hp-sprite else @vp-sprite),
           state, bullet-x, bullet-y
 
     else if not @projectile-b
       @projectile-b =
-        new Projectile (if state.HORIZONTAL then @hp-sprite else @vp-sprite),
+        new PolarStarProjectile (if state.HORIZONTAL then @hp-sprite else @vp-sprite),
           state, bullet-x, bullet-y
 
   stop-fire: ->
-    #@projectile = null
 
 
   # Coordinates getters
@@ -187,6 +192,11 @@ export class PolarStar
   gun-bob: (state) ->
     if state.WALKING and (state.STRIDE_LEFT or state.STRIDE_RIGHT) then -2 else 0
 
+  get-projectiles: ->
+    projectiles = []
+    if @projectile-a then projectiles.push that
+    if @projectile-b then projectiles.push that
+    return projectiles
 
   # Update methods
 
