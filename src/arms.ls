@@ -68,7 +68,7 @@ class PolarStarProjectile extends Projectile
     @lifespan = kL1Lifespan
     @alive    = yes
 
-    std.log 'SFX: Blam!'
+    std.log 'SFX: Pew!'
 
     @width  = if state.HORIZONTAL then kL1CollisionWidth  else kL1CollisionHeight
     @height = if state.HORIZONTAL then kL1CollisionHeight else kL1CollisionWidth

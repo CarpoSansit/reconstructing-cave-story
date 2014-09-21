@@ -6,7 +6,7 @@ require! \./units
 
 { div } = std
 
-{ tile-to-px } = units
+{ tile-to-px, game-to-px, tile-to-game } = units
 
 { Sprite }          = require \./sprite
 { FixedBackdrop }   = require \./backdrop
@@ -16,6 +16,8 @@ require! \./units
 # Constants
 
 [ AIR_TILE, WALL_TILE ] = std.enum
+
+kMapWidth = 20
 
 
 # Private class: Tile
@@ -36,8 +38,8 @@ module.exports = class Map
 
   ->
     @backdrop = null
-    @tiles    = Map.create-matrix (new Tile), 20, 15
-    @bg-tiles = Map.create-matrix null, 20, 15
+    @tiles    = Map.create-matrix (new Tile), kMapWidth, 15
+    @bg-tiles = Map.create-matrix null, kMapWidth, 15
 
   #update: (elapsed-time) ->
   #  for row in @tiles
@@ -47,25 +49,28 @@ module.exports = class Map
   draw: (graphics) ->
     for row, y in @tiles
       for tile, x in row
-        tile.sprite?.draw graphics, units.tile-to-game(x), units.tile-to-game(y)
+        tile.sprite?.draw graphics, tile-to-game(x), tile-to-game(y)
 
   draw-background: (graphics) ->
     @backdrop.draw graphics
 
     for row, y in @bg-tiles
       for sprite, x in row
-        sprite?.draw graphics, units.tile-to-game(x), units.tile-to-game(y)
+        sprite?.draw graphics, tile-to-game(x), tile-to-game(y)
 
   get-colliding-tiles: (rect) ->
-    first-row = units.game-to-px(rect.top)    `div` units.tile-to-px(1)
-    last-row  = units.game-to-px(rect.bottom) `div` units.tile-to-px(1)
-    first-col = units.game-to-px(rect.left)   `div` units.tile-to-px(1)
-    last-col  = units.game-to-px(rect.right)  `div` units.tile-to-px(1)
+    first-row = game-to-px(rect.top)    `div` tile-to-px(1)
+    last-row  = game-to-px(rect.bottom) `div` tile-to-px(1)
+    first-col = game-to-px(rect.left)   `div` tile-to-px(1)
+    last-col  = game-to-px(rect.right)  `div` tile-to-px(1)
     collision-tiles = []
 
     for row from first-row to last-row
       for col from first-col to last-col
-        collision-tiles.push new CollisionTile row, col, @tiles[row][col].type
+        if row < 0 or col < 0 or col >= kMapWidth
+          collision-tiles.push new CollisionTile row, col, WALL_TILE
+        else
+          collision-tiles.push new CollisionTile row, col, @tiles[row][col].type
 
     return collision-tiles
 
@@ -87,8 +92,8 @@ module.exports = class Map
 
     # Basic block
     tile = new Tile WALL_TILE, new Sprite graphics, fg-path,
-      units.tile-to-px(1), 0,
-      units.tile-to-px(1), units.tile-to-px(1)
+      tile-to-px(1), 0,
+      tile-to-px(1), tile-to-px(1)
 
     # Floor
     for col from 0 to num-cols
