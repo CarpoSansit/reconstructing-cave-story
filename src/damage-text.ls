@@ -36,9 +36,9 @@ export class DamageText
   update: (elapsed-time) ->
     if @timer.is-expired
       @damage = 0
-
     if @should-rise
       @offset-y = std.max units.tile-to-game(-1), @offset-y + kVelocity * elapsed-time
+    return @expired
 
   draw: (graphics) ->
     if @timer.is-active and @damage > 0

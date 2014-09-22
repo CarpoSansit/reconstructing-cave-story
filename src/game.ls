@@ -131,16 +131,17 @@ event-loop = ->
 update = (elapsed-time) ->
   Timer.update-all elapsed-time
   player.update elapsed-time, map
-  bat.update elapsed-time, player.x
+  if not bat?.update elapsed-time, player.x
+    bat := null
 
   # Bullet-to-enemy collisions
   for projectile in player.get-projectiles!
-    if bat.collision-rectangle!collides-with projectile.collision-rectangle!
+    if bat?.collision-rectangle!collides-with projectile.collision-rectangle!
       projectile.collide-with-enemy!
       bat.take-damage projectile.contact-damage
 
   # Enemy-to-player collisions
-  if bat.damage-collision!.collides-with player.damage-collision!
+  if bat?.damage-collision!.collides-with player.damage-collision!
     player.take-damage bat.contact-damage
 
   # This goes last, because if collisions have caused damage, damagetexts
@@ -152,7 +153,7 @@ update = (elapsed-time) ->
 draw = ->
   graphics.clear!
   map.draw-background graphics
-  bat.draw graphics
+  bat?.draw graphics
   player.draw graphics
   map.draw graphics
   player.draw-hud graphics

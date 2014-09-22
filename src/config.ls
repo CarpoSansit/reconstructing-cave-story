@@ -24,8 +24,8 @@ export kGraphicsQuality = 32
 
 # Debug Flags
 
-export kDebugMode = on
 export show-collisions   = yes
+export show-spritesheets = yes
 
 
 # Asset paths

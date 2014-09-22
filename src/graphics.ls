@@ -37,18 +37,21 @@ screen = SDL.set-video-mode(
 export load-image = (filename, use-transparency = no) ->
   if not spritesheets[filename]?
     spritesheets[filename] = SDL.load-image config.find-asset filename
-    if use-transparency then SDL.set-color-key spritesheets[filename], kTransparentColor
-    if config.kDebugMode then document.body.append-child spritesheets[filename].canvas
+    if use-transparency
+      SDL.set-color-key spritesheets[filename], kTransparentColor
+    if config.show-spritesheets
+      document.body.append-child spritesheets[filename].canvas
   return spritesheets[filename]
 
 # Graphics::blit-surface (SDL::Surface, SDL::Rect, SDL::Rect)
 export blit-surface = (source, src-rect, dest-rect) ->
   SDL.blit-surface source, src-rect, screen, dest-rect
 
+# Graphics::clear
+export clear = screen~clear
+
 # Graphics::visualiseRect (Rect)
 export visualiseRect = (rect, fill) ->
-
-  # translate between game Rect and SDL Rect
   paint-rect = new SDL.Rect units.game-to-px(rect.left), units.game-to-px(rect.top),
     units.game-to-px(rect.w), units.game-to-px(rect.h)
 
@@ -56,9 +59,4 @@ export visualiseRect = (rect, fill) ->
     screen.draw-rect paint-rect, \red
   else
     screen.draw-box paint-rect, \red
-
-
-# Graphics::clear
-export clear = ->
-  screen.clear!
 

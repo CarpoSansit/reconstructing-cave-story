@@ -40,13 +40,11 @@ export class FirstCaveBat extends Damageable
   (graphics, @x, @flight-center-y) ->
     @y = @flight-center-y
     @flight-angle = 0
+    @alive = yes
     @angular-velocity = kAngularVelocity
-    @horizontal-facing = RIGHT
     @sprites = @initialise-sprites graphics
     @damage-text = new DamageText graphics
     @contact-damage = kContactDamage
-    @center-x = @x + kHalfTile
-    @center-y = @y + kHalfTile
     DamageTexts.add-damageable this
 
   spritestate:~ ->
@@ -68,6 +66,7 @@ export class FirstCaveBat extends Damageable
     @flight-angle += @angular-velocity * elapsed-time
     @y = @flight-center-y + units.tile-to-game(5) / 2 * std.sin units.deg-to-rad @flight-angle
     @sprites[@spritestate].update elapsed-time
+    return @alive
 
   draw: (graphics) ->
     if config.show-collisions
@@ -81,8 +80,8 @@ export class FirstCaveBat extends Damageable
     new Rect @x, @y, tile-to-game(1), tile-to-game(1)
 
   take-damage: (damage) ->
-    std.log 'FirstCaveBat::takeDamage -', damage
     @damage-text.set-damage damage
+    @alive = no
 
   # Damageable
   center-x:~ -> @x + kHalfTile

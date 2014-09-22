@@ -29,6 +29,9 @@ export class Timer
   is-expired:~ ->
     not @is-active
 
+  active: -> @current-time < @expiration-time
+  expired: -> not (@current-time < @expiration-time)
+
   @update-all = (elapsed-time) ->
     all-timers.map (.update elapsed-time)
 
