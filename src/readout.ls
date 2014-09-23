@@ -3,6 +3,9 @@
 #
 # Helper to output streams of information without clogging the console
 
+require! \./config
+
+
 # Helpers
 
 elm = document~create-element
@@ -54,7 +57,8 @@ apply-styles host, do
 # Methods
 
 export install = ->
-  document.body.append-child host
+  if config.show-readout
+    document.body.append-child host
 
 export add-reader = (name, label, value) ->
   readers[name] = new Reader name, label, value
