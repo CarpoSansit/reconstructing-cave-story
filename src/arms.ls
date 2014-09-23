@@ -123,11 +123,11 @@ export class PolarStar
     @projectile-b = null
     @sprites = @initialise-sprites graphics
 
-    @hp-sprite = new Sprite graphics, \bullet,
+    @hp-sprite = new Sprite graphics, \Bullet,
       tile-to-px(kHorizProjectileSourceX), tile-to-px(kProjectileSourceY),
       tile-to-px(1), tile-to-px(1)
 
-    @vp-sprite = new Sprite graphics, \bullet,
+    @vp-sprite = new Sprite graphics, \Bullet,
       tile-to-px(kVerticalProjectileSourceX), tile-to-px(kProjectileSourceY),
       tile-to-px(1), tile-to-px(1)
 
