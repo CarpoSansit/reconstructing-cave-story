@@ -8,13 +8,17 @@
 #
 
 require! \std
+require! \./readout
 
 
 # State
 
 all-texts = []
 owners    = new WeakMap
-reject    = (std.flip std.reject) all-texts
+reject    = std.flip std.reject
+
+
+readout.add-reader \damageabletexts, 'DamageTexts', 0
 
 
 # Export singleton
@@ -27,9 +31,14 @@ export DamageTexts =
     owners.set text, damageable
 
   update: (elapsed-time) ->
-    all-texts := reject (text) ->
+
+    readout.update \damageabletexts, all-texts.length
+
+    all-texts := reject all-texts, (text) ->
+      std.log text, owners.get text
       if not text.expired
         owner = owners.get text
+
         text.set-position owner.center-x, owner.center-y
       return text.update elapsed-time
 
