@@ -28,8 +28,6 @@ export kGraphicsQuality = 32
 # ENABLE_DEBUG_FEATURES anywhere on the page to set these options to true. I
 # might make this more granular later.
 
-console.log ENABLE_DEBUG_FEATURES
-
 export debug-features    = if ENABLE_DEBUG_FEATURES? then that else no
 export show-collisions   = debug-features
 export show-spritesheets = debug-features
@@ -40,11 +38,11 @@ export show-readout      = debug-features
 
 switch kGraphicsQuality
 | 16 =>
-  export asset-path = 'data/16x16/'
+  export asset-path = 'public/data/16x16/'
   export file-ext   = '.bmp'
 
 | 32 =>
-  export asset-path = 'data/32x32/'
+  export asset-path = 'public/data/32x32/'
   export file-ext   = '.bmp'
 
 export find-asset = (asset-path +) . (+ file-ext)
