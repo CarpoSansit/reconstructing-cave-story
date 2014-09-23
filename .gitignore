@@ -1,3 +1,12 @@
 .DS_Store
 node_modules
 public/data/32x32
+public/data/16x16/**/*
+!public/data/16x16/Arms.bmp
+!public/data/16x16/Bullet.bmp
+!public/data/16x16/bkBlue.bmp
+!public/data/16x16/TextBox.bmp
+!public/data/16x16/Stage/PrtCave.bmp
+!public/data/16x16/Npc/NpcCemet.bmp
+!public/data/16x16/Stage/PrtCent.bmp
+
