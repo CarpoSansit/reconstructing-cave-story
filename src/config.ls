@@ -19,7 +19,7 @@ export kScreenHeight = 15  # Tiles
 export kFps          = 60
 export kMaxFrameTime = 5 * 1000 / kFps
 
-export kGraphicsQuality = 32
+export kGraphicsQuality = 16
 
 
 # Debug Flags
