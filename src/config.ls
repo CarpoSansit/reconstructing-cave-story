@@ -24,8 +24,16 @@ export kGraphicsQuality = 32
 
 # Debug Flags
 
-export show-collisions   = yes
-export show-spritesheets = yes
+# Take global env variable into account if it exists. This way someone can put
+# ENABLE_DEBUG_FEATURES anywhere on the page to set these options to true. I
+# might make this more granular later.
+
+console.log ENABLE_DEBUG_FEATURES
+
+export debug-features    = if ENABLE_DEBUG_FEATURES? then that else no
+export show-collisions   = debug-features
+export show-spritesheets = debug-features
+export show-readout      = debug-features
 
 
 # Asset paths
