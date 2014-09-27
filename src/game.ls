@@ -167,8 +167,8 @@ draw = ->
   bat?.draw graphics
   player.draw graphics
   map.draw graphics
-  player.draw-hud graphics
   particle-system.draw graphics
+  player.draw-hud graphics
   DamageTexts.draw graphics
 
 # Game::create-test-world

@@ -107,9 +107,9 @@ module.exports = class Map
     map.tiles[8][10] = tile
 
     # Background tiles
-    chain-top = new Sprite graphics, fg-path, tile-to-px(11), tile-to-px(2), tile-to-px(1), tile-to-px(1)
-    chain-mid = new Sprite graphics, fg-path, tile-to-px(12), tile-to-px(2), tile-to-px(1), tile-to-px(1)
-    chain-btm = new Sprite graphics, fg-path, tile-to-px(13), tile-to-px(2), tile-to-px(1), tile-to-px(1)
+    chain-top = new Sprite graphics, fg-path, new SpriteSource 11, 2
+    chain-mid = new Sprite graphics, fg-path, new SpriteSource 12, 2
+    chain-btm = new Sprite graphics, fg-path, new SpriteSource 13, 2
     map.bg-tiles[8][2] = chain-top
     map.bg-tiles[9][2] = chain-mid
     map.bg-tiles[10][2] = chain-btm
