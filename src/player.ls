@@ -55,8 +55,14 @@ kInvincibleFlashTime = 50
 
 # Collision boxes
 kCollisionX = new Rect 6, 10, 20, 12
-kCollisionY = new Rect 10, 2, 12, 30
 
+kCollisionYTop         = 2
+kCollisionYHeight      = 30
+kCollisionYTopWidth    = 18
+kCollisionYBottomWidth = 10
+kCollisionYTopLeft     = (tile-to-game(1) - kCollisionYTopWidth) / 2
+kCollisionYBottomLeft  = (tile-to-game(1) - kCollisionYBottomWidth) / 2
+kCollisionYBottom      = kCollisionYTop + kCollisionYHeight
 
 # Private class: WalkingAnimation
 
@@ -216,7 +222,7 @@ export class Player extends Damageable
     if Δy > 0
       @on-wall-collision map, (@bottom-collision Δy), (tile) ->
         if tile
-          @y = units.tile-to-game(tile.row) - kCollisionY.bottom
+          @y = units.tile-to-game(tile.row) - kCollisionYBottom
           @velocity-y = 0
           @on-ground = yes
         else
@@ -225,13 +231,13 @@ export class Player extends Damageable
 
       @on-wall-collision map, (@top-collision 0), (tile) ->
         if tile
-          @y = units.tile-to-game(tile.row) + kCollisionY.h
+          @y = units.tile-to-game(tile.row) + kCollisionYHeight
 
     # Jumping
     else
       @on-wall-collision map, (@top-collision Δy), (tile) ->
         if tile
-          @y = units.tile-to-game(tile.row) + kCollisionY.h
+          @y = units.tile-to-game(tile.row) + kCollisionYHeight
           @velocity-y = 0
         else
           @y += Δy
@@ -239,7 +245,7 @@ export class Player extends Damageable
 
       @on-wall-collision map, (@bottom-collision 0), (tile) ->
         if tile
-          @y = units.tile-to-game(tile.row) - kCollisionY.bottom
+          @y = units.tile-to-game(tile.row) - kCollisionYBottom
           @on-ground = yes
 
   take-damage: (damage = 1) ->
@@ -293,17 +299,17 @@ export class Player extends Damageable
       kCollisionX.w/2 + Δ, kCollisionX.h
 
   top-collision: (Δ) ->
-    new Rect @x + kCollisionY.left, @y + kCollisionY.top + Δ,
-      kCollisionY.w, kCollisionY.h/2 - Δ
+    new Rect @x + kCollisionYTopLeft, @y + kCollisionYTop + Δ,
+      kCollisionYTopWidth, kCollisionYHeight/2 - Δ
 
   bottom-collision: (Δ) ->
-    new Rect @x + kCollisionY.left,
-      @y + kCollisionY.top + kCollisionY.h/2 + Δ
-      kCollisionY.w, kCollisionY.h/2 + Δ
+    new Rect @x + kCollisionYBottomLeft,
+      @y + kCollisionYTop + kCollisionYHeight/2 + Δ
+      kCollisionYBottomWidth, kCollisionYHeight/2 + Δ
 
   damage-collision: ->
-    new Rect @x + kCollisionX.left, @y + kCollisionY.top,
-      kCollisionX.w, kCollisionY.h
+    new Rect @x + kCollisionX.left, @y + kCollisionYTop,
+      kCollisionX.w, kCollisionYHeight
 
   on-wall-collision: (map, rect, λ) ->
     for tile in map.get-colliding-tiles rect
