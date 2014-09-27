@@ -16,6 +16,7 @@ require! \./units
 { SpriteState, State } = require \./spritestate
 { Projectile }         = require \./projectile
 { StarParticle }       = require \./star-particle
+{ WallParticle }       = require \./wall-particle
 
 { Rectangle: Rect, SpriteSource } = require \./rectangle
 
@@ -58,6 +59,9 @@ kL1Speed           = 0.6
 kL1CollisionWidth  = 32
 kL1CollisionHeight = 4
 
+# Firing direction modes
+
+[ UP, DOWN, LEFT, RIGHT ] = std.enum
 
 
 # Private Class: Projectile
@@ -72,8 +76,21 @@ class PolarStarProjectile extends Projectile
 
     std.log 'SFX: Pew!'
 
-    @width  = if state.HORIZONTAL then kL1CollisionWidth  else kL1CollisionHeight
-    @height = if state.HORIZONTAL then kL1CollisionHeight else kL1CollisionWidth
+    if state.HORIZONTAL
+      @width  = kL1CollisionWidth
+      @height = kL1CollisionHeight
+      @vertical = no
+    else
+      @width  = kL1CollisionHeight
+      @height = kL1CollisionWidth
+      @vertical = yes
+
+    # Just so we can get it later
+    @mode = switch true
+    | state.UP    => UP
+    | state.DOWN  => DOWN
+    | state.LEFT  => LEFT
+    | state.RIGHT => RIGHT
 
     Object.define-properties this, do
       x: get:
@@ -100,8 +117,25 @@ class PolarStarProjectile extends Projectile
 
   update: (elapsed-time, map, ptools) ->
     @offset += kL1Speed * elapsed-time
+
     for tile in map.get-colliding-tiles @collision-rectangle!
       if tile.type is WALL_TILE
+        tile-rect = new Rect tile-to-game(tile.col), tile-to-game(tile.row),
+          tile-to-game(1), tile-to-game(1)
+
+        particle-x = @x
+        particle-y = @y
+
+        switch @mode
+        | UP =>    particle-y = tile-rect.bottom - kHalfTile
+        | DOWN =>  particle-y = tile-rect.top - kHalfTile
+        | LEFT =>  particle-x = tile-rect.right - kHalfTile
+        | RIGHT => particle-x = tile-rect.left - kHalfTile
+
+        ptools.system.add-new-particle new WallParticle ptools.graphics,
+          particle-x, particle-y
+
+        # Die (as a function AND as a particle) before end of for loop
         return false
 
     # Report status
