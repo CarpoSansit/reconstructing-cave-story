@@ -10,19 +10,21 @@ require! \./readout
 
 { kHalfTile, tile-to-game, tile-to-px: tpx } = units
 
-{ WALL_TILE }        = require \./map
-{ Timer }            = require \./timer
-{ Health }           = require \./health
-{ Damageable }       = require \./damageable
-{ DamageText }       = require \./damage-text
-{ DamageTexts }      = require \./damage-texts
-{ PolarStar }        = require \./arms
-{ GunExperienceHUD } = require \./gun-xp-hud
-
+{ Timer }              = require \./timer
+{ Health }             = require \./health
+{ Kinematics }         = require \./kinematics
+{ Damageable }         = require \./damageable
+{ DamageText }         = require \./damage-text
+{ DamageTexts }        = require \./damage-texts
+{ PolarStar }          = require \./arms
+{ GunExperienceHUD }   = require \./gun-xp-hud
+{ MapCollidable }      = require \./map-collidable
+{ CollisionRectangle } = require \./collision-rectangle
 { SpriteState, State } = require \./spritestate
 { Rectangle: Rect }    = require \./rectangle
 { HeadBumpParticle }   = require \./head-bump-particle
 
+{ Side } = require \./map-collidable
 { Sprite, AnimatedSprite, NumberSprite } = require \./sprite
 
 
@@ -66,7 +68,13 @@ kCollisionYTopWidth    = 18
 kCollisionYBottomWidth = 10
 kCollisionYTopLeft     = (tile-to-game(1) - kCollisionYTopWidth) / 2
 kCollisionYBottomLeft  = (tile-to-game(1) - kCollisionYBottomWidth) / 2
-kCollisionYBottom      = kCollisionYTop + kCollisionYHeight
+
+kCollisionRectangle = new CollisionRectangle(
+  new Rect kCollisionYTopLeft, kCollisionYTop, kCollisionYTopWidth, kCollisionYHeight / 2
+  new Rect kCollisionYBottomLeft, kCollisionYTop + kCollisionYHeight/2, kCollisionYBottomWidth, kCollisionYHeight / 2
+  new Rect 6, 10, 10, 12
+  new Rect 16, 10, 10, 12
+)
 
 
 # Private class: WalkingAnimation
@@ -104,21 +112,23 @@ class WalkingAnimation
 
 # Player class
 
-export class Player extends Damageable
+export class Player implements Damageable::, MapCollidable::
 
   # Player (Game, Game) - Initial position - constructor
 
-  (graphics, @x, @y) ->
+  (graphics, x, y, @ptools) ->
 
     # Player state (excluding x and y)
-    @velocity-y        = 0
-    @velocity-x        = 0
     @acceleration-x    = 0
     @horizontal-facing = State.LEFT
-    @intended-vertical-facing   = State.HORIZONTAL
+    @intended-vertical-facing = State.HORIZONTAL
     @on-ground         = no
     @jump-active       = no
     @interacting       = no
+
+    # Kinematics
+    @kinematics-x = new Kinematics x, 0
+    @kinematics-y = new Kinematics y, 0
 
     # Animation sync
     @walk-animation = new WalkingAnimation kNumWalkFrames, kWalkFps
@@ -163,98 +173,40 @@ export class Player extends Damageable
 
       new Sprite graphics, \MyChar, tpx(tile-x), tpx(tile-y), tpx(1), tpx(1)
 
-  update: (elapsed-time, map, ptools) ->
+  update: (elapsed-time, map) ->
     @sprites[@get-sprite-state!key].update elapsed-time
     @health.update elapsed-time
-    @gun.update-projectiles elapsed-time, map, ptools
-    @update-x elapsed-time, map
-    @update-y elapsed-time, map, ptools
-    @walk-animation.update elapsed-time
+    @gun.update-projectiles elapsed-time, map, @ptools
 
-  update-x: (elapsed-time, map) ->
+    # X - note, Chris' code is slightly different here and I didn't notice.
+    # His acc-x is negative when @on-ground and @acceleration-x is negative.
+    # Everything seems to work, so not sure what thats about. Check if suspect.
     acc-x = if @on-ground then kWalkingAcceleration else kAirAcceleration
-    @velocity-x += @acceleration-x * acc-x * elapsed-time
+    @kinematics-x.velocity += @acceleration-x * acc-x * elapsed-time
 
     if @acceleration-x < 0
-      @velocity-x = std.max(@velocity-x, -kMaxSpeedX);
+      @kinematics-x.velocity = std.max(@kinematics-x.velocity, -kMaxSpeedX);
     else if @acceleration-x > 0
-      @velocity-x = std.min(@velocity-x, kMaxSpeedX);
+      @kinematics-x.velocity = std.min(@kinematics-x.velocity, kMaxSpeedX);
     else if @on-ground
-      @velocity-x =
-        if @velocity-x > 0
-          std.max 0, @velocity-x - kFriction * elapsed-time
+      @kinematics-x.velocity =
+        if @kinematics-x.velocity > 0
+          std.max 0, @kinematics-x.velocity - kFriction * elapsed-time
         else
-          std.min 0, @velocity-x + kFriction * elapsed-time
+          std.min 0, @kinematics-x.velocity + kFriction * elapsed-time
+    @update-x kCollisionRectangle, @kinematics-x, @kinematics-y, elapsed-time, map
 
-    Δx = @velocity-x * elapsed-time
+    # Y
+    gravity = if @jump-active and @kinematics-y.velocity < 0 then kJumpGravity else kGravity
+    @kinematics-y.velocity = std.min @kinematics-y.velocity + gravity * elapsed-time, kMaxSpeedY
+    @update-y kCollisionRectangle, @kinematics-x, @kinematics-y, elapsed-time, map
 
-    if Δx > 0
-      @on-wall-collision map, (@right-collision Δx), (tile) ->
-        if tile
-          @x = units.tile-to-game(tile.col) - kCollisionX.right
-          @velocity-x = 0
-        else
-          @x += Δx
-
-      @on-wall-collision map, (@left-collision 0), (tile) ->
-        if tile
-          @x = units.tile-to-game(tile.col) + kCollisionX.right
-
-    else
-      @on-wall-collision map, (@left-collision Δx), (tile) ->
-        if tile
-          @x = units.tile-to-game(tile.col) + kCollisionX.right
-          @velocity-x = 0
-        else
-          @x += Δx
-
-      @on-wall-collision map, (@right-collision 0), (tile) ->
-        if tile
-          @x = units.tile-to-game(tile.col) - kCollisionX.right
-
-
-  update-y: (elapsed-time, map, ptools) ->
-    gravity = if @jump-active and @velocity-y < 0 then kJumpGravity else kGravity
-    @velocity-y = std.min @velocity-y + gravity * elapsed-time, kMaxSpeedY
-
-    Δy = @velocity-y * elapsed-time
-
-    # Falling
-    if Δy > 0
-      @on-wall-collision map, (@bottom-collision Δy), (tile) ->
-        if tile
-          @y = units.tile-to-game(tile.row) - kCollisionYBottom
-          @velocity-y = 0
-          @on-ground = yes
-        else
-          @y += Δy
-          @on-ground = no
-
-      @on-wall-collision map, (@top-collision 0), (tile) ->
-        if tile
-          @y = units.tile-to-game(tile.row) + kCollisionYHeight
-
-    # Jumping
-    else
-      @on-wall-collision map, (@top-collision Δy), (tile) ->
-        if tile
-          @y = units.tile-to-game(tile.row) + kCollisionYHeight
-          @velocity-y = 0
-          ptools.front-system.add-new-particle new HeadBumpParticle ptools.graphics,
-            @center-x, @y + kCollisionYTop
-        else
-          @y += Δy
-          @on-ground = no
-
-      @on-wall-collision map, (@bottom-collision 0), (tile) ->
-        if tile
-          @y = units.tile-to-game(tile.row) - kCollisionYBottom
-          @on-ground = yes
+    @walk-animation.update elapsed-time
 
   take-damage: (damage = 1) ->
     unless @invincible-timer.is-active
       @health.take-damage damage
-      @velocity-y = std.min -kShortJumpSpeed, @velocity-y
+      @kinematics-y.velocity = std.min -kShortJumpSpeed, @kinematics-y.velocity
       @invincible = yes
       @invincible-timer.reset!
       @damage-text.set-damage damage
@@ -271,8 +223,8 @@ export class Player extends Damageable
       graphics.visualise-rect @damage-collision!
     if @sprite-is-visible!
       state = @get-sprite-state!
-      @gun.draw graphics, @x, @y, state
-      @sprites[state.key].draw graphics, @x, @y
+      @gun.draw graphics, @kinematics-x.position, @kinematics-y.position, state
+      @sprites[state.key].draw graphics, @kinematics-x.position, @kinematics-y.position
 
   draw-hud: (graphics) ->
     return unless @sprite-is-visible!
@@ -286,40 +238,42 @@ export class Player extends Damageable
       else if @on-ground
         if @acceleration-x is 0 then State.STANDING else State.WALKING
       else
-        if @velocity-y < 0 then State.JUMPING else State.FALLING
+        if @kinematics-y.velocity < 0 then State.JUMPING else State.FALLING
     SpriteState.make @horizontal-facing, @vertical-facing!,
       motion-type, @walk-animation.stride!
 
 
-  # Collision spaces
+  # MapCollidable
 
-  left-collision: (Δ) -> # Δ <= 0
-    new Rect @x + kCollisionX.left + Δ, @y + kCollisionX.top,
-      kCollisionX.w/2 - Δ, kCollisionX.h
+  on-collision: (side, is-delta-direction) ->
+    switch side
+    | Side.TOP =>
+      if is-delta-direction
+        @kinematics-y.velocity = 0
+      @ptools.front-system.add-new-particle new HeadBumpParticle @ptools.graphics,
+        @center-x, @kinematics-y.position + kCollisionRectangle.bounding-box.top
+    | Side.BOTTOM =>
+      @on-ground = true
+      if is-delta-direction
+        @kinematics-y.velocity = 0
+    | Side.LEFT =>
+      if is-delta-direction
+        @kinematics-x.velocity = 0
+    | Side.RIGHT  =>
+      if is-delta-direction
+        @kinematics-x.velocity = 0
 
-  right-collision: (Δ) -> # Δ >= 0
-    new Rect @x + kCollisionX.left + kCollisionX.w/2,
-      @y + kCollisionX.top,
-      kCollisionX.w/2 + Δ, kCollisionX.h
-
-  top-collision: (Δ) ->
-    new Rect @x + kCollisionYTopLeft, @y + kCollisionYTop + Δ,
-      kCollisionYTopWidth, kCollisionYHeight/2 - Δ
-
-  bottom-collision: (Δ) ->
-    new Rect @x + kCollisionYBottomLeft,
-      @y + kCollisionYTop + kCollisionYHeight/2 + Δ
-      kCollisionYBottomWidth, kCollisionYHeight/2 + Δ
+  on-delta: (side) ->
+    switch side
+    | Side.TOP =>
+      @on-ground = false
+    | Side.BOTTOM =>
+      @on-ground = false
+    | Side.LEFT =>
+    | Side.RIGHT =>
 
   damage-collision: ->
-    new Rect @x + kCollisionX.left, @y + kCollisionYTop,
-      kCollisionX.w, kCollisionYHeight
-
-  on-wall-collision: (map, rect, λ) ->
-    for tile in map.get-colliding-tiles rect
-      if tile.type is WALL_TILE
-        return λ.call this, tile
-    λ.call this
+    kCollisionRectangle.bounding-box.translate @kinematics-x.position, @kinematics-y.position
 
 
   # Button handlers
@@ -342,13 +296,13 @@ export class Player extends Damageable
   start-jump: ->
     @jump-active = yes
     @interacting = no
-    @velocity-y = -kJumpSpeed if @on-ground
+    @kinematics-y.velocity = -kJumpSpeed if @on-ground
 
   stop-jump: ->
     @jump-active = no
 
   start-fire: ->
-    @gun.start-fire @get-sprite-state!, @x, @y
+    @gun.start-fire @get-sprite-state!, @kinematics-x.position, @kinematics-y.position
 
   stop-fire: ->
     @gun.stop-fire!
@@ -365,10 +319,9 @@ export class Player extends Damageable
   look-horizontal: ->
     @intended-vertical-facing = State.HORIZONTAL
 
-
-  # Damageable getters
-  center-x:~ -> @x + kHalfTile
-  center-y:~ -> @y + kHalfTile
+  # Damageable
+  center-x:~ -> @kinematics-x.position + kHalfTile
+  center-y:~ -> @kinematics-y.position + kHalfTile
   get-damage-text: -> @damage-text
 
   # Misc getters

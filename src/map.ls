@@ -10,7 +10,6 @@ require! \./units
 
 { Sprite }        = require \./sprite
 { FixedBackdrop } = require \./backdrop
-{ SpriteSource }  = require \./rectangle
 
 
 # Constants

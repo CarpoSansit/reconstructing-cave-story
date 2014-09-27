@@ -9,8 +9,7 @@ require! \./units
 { div } = std
 { kHalfTile, px-to-tile, tile-to-px:tpx, px-to-game, tile-to-game } = units
 
-{ Timer }        = require \./timer
-{ SpriteSource } = require \./rectangle
+{ Timer } = require \./timer
 
 { Sprite, NumberSprite, VaryingWidthSprite } = require \./sprite
 

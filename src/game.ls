@@ -136,7 +136,7 @@ event-loop = ->
 # Game::update
 update = (elapsed-time) ->
   Timer.update-all elapsed-time
-  player.update elapsed-time, map, ptools
+  player.update elapsed-time, map
 
   # Bat died
   if bat and not bat?.update elapsed-time, player.x
@@ -175,9 +175,9 @@ draw = ->
 # Game::create-test-world
 create-test-world = ->
   map    := Map.create-test-map graphics
-  player := new Player graphics, units.tile-to-game(kScreenWidth/2), units.tile-to-game(10)
-  bat    := new FirstCaveBat graphics, units.tile-to-game(7), units.tile-to-game(8)
   ptools := new ParticleTools graphics
+  player := new Player graphics, units.tile-to-game(kScreenWidth/2), units.tile-to-game(10), ptools
+  bat    := new FirstCaveBat graphics, units.tile-to-game(7), units.tile-to-game(8)
 
 # Game::start
 export start = ->

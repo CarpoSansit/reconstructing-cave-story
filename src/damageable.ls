@@ -5,9 +5,7 @@
 
 require! \std
 
-class InterfaceError extends Error
-  (@message) ->
-    @name = \InterfaceError
+{ InterfaceError } = std
 
 
 # Damageable pseudo-interface
@@ -19,12 +17,8 @@ class InterfaceError extends Error
 # the lack of implementation.
 
 export class Damageable
-  center-x:~ ->
-    throw new InterfaceError "Damageable - `center-x` getter not implemented"
-
-  center-y:~ ->
-    throw new InterfaceError "Damageable - `center-y` getter not implemented"
-
+  center-x: 0  # Implement as a getter
+  center-y: 0  # Implement as a getter
   get-damage-text: ->
     throw new InterfaceError "Damageable - `get-damage-text` method not implemented"
 

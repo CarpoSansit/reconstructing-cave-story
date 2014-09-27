@@ -37,6 +37,13 @@ export tau = Math.PI * 2
 export rand = (min, max) -> min + Math.random! * (max - min)
 
 
+# Custom Exceptions
+
+export class InterfaceError extends Error
+  (@message) ->
+    @name = \InterfaceError
+
+
 # Export
 
 export {
