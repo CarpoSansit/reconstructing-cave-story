@@ -42,7 +42,7 @@ export class DeathCloudParticle
       @center-y + @offset.y - kHalfTile
 
   @create-random-death-clouds = (ptools, center-x, center-y, num) ->
-    for ix from 0 to num
+    for ix from 0 til num
       random-angle = std.rand 0, std.tau
       random-speed = kBaseVelocity * std.rand 0, 2
       ptools.entity-system.add-new-particle new DeathCloudParticle ptools.graphics,
