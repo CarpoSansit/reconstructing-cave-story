@@ -8,10 +8,9 @@ require! \std
 require! \./units
 
 { div } = std
-{ tile-to-game, tile-to-px, game-to-px, kHalfTile } = units
+{ tile-to-game, tile-to-px:tpx, game-to-px, kHalfTile } = units
 
 { Timer }        = require \./timer
-{ SpriteSource } = require \./rectangle
 
 { Sprite, NumberSprite, VaryingWidthSprite } = require \./sprite
 
@@ -30,22 +29,40 @@ kFlashPeriod = 40
 
 kSpriteName = \TextBox
 
-kBarSrc   = new SpriteSource 0.0, 4.5, 2.5, 0.5
-kFlashSrc = new SpriteSource 2.5, 5.0, 2.5, 0.5
-kFillSrc  = new SpriteSource 0.0, 5.0, 2.5, 0.5
-kMaxSrc   = new SpriteSource 2.5, 4.5, 2.5, 0.5
-kLvSrc    = x: tile-to-px(5), y: game-to-px(160), w: tile-to-px(1), h: tile-to-px 0.5
+kBarSrcWidth  = 2.5
+kBarSrcHeight = 0.5
+
+kBarSrcX   = 0.0
+kBarSrcY   = 4.5
+kFlashSrcX = 2.5
+kFlashSrcY = 5.0
+kMaxSrcX   = 2.5
+kMaxSrcY   = 4.5
+kFillSrcX  = 0.0
+kFillSrcY  = 5.0
+
+# This one in terms of Game becuase of unusual sprite placement
+kLvlSrcX      = tile-to-game 5
+kLvlSrcY      = 160
+kLvlSrcWidth  = tile-to-game 1
+kLvlSrcHeight = tile-to-game 0.5
 
 
 # GunExperienceHUD
 
 export class GunExperienceHUD
   (graphics, level-xp, max-xp) ->
-    @xp-bar-sprite = new Sprite graphics, kSpriteName, kBarSrc
-    @lv-sprite     = new Sprite graphics, kSpriteName, kLvSrc
-    @flash-sprite  = new Sprite graphics, kSpriteName, kFlashSrc
-    @max-sprite    = new Sprite graphics, kSpriteName, kMaxSrc
-    @fill-sprite   = new VaryingWidthSprite graphics, kSpriteName, kFillSrc
+    @xp-bar-sprite = new Sprite graphics, kSpriteName,
+      tpx(kBarSrcX), tpx(kBarSrcY), tpx(kBarSrcWidth), tpx(kBarSrcHeight)
+    @lv-sprite  = new Sprite graphics, kSpriteName,
+      game-to-px(kLvlSrcX), game-to-px(kLvlSrcY), game-to-px(kLvlSrcWidth), game-to-px(kLvlSrcHeight)
+    @flash-sprite = new Sprite graphics, kSpriteName,
+      tpx(kFlashSrcX), tpx(kFlashSrcY), tpx(kBarSrcWidth), tpx(kBarSrcHeight)
+    @max-sprite = new Sprite graphics, kSpriteName,
+      tpx(kMaxSrcX), tpx(kMaxSrcY), tpx(kBarSrcWidth), tpx(kBarSrcHeight)
+    @fill-sprite = new VaryingWidthSprite graphics, kSpriteName,
+      tpx(kFillSrcX), tpx(kFillSrcY), tpx(kBarSrcWidth), tpx(kBarSrcHeight)
+
     @flash-timer   = new Timer kFlashTime
 
   activate-flash: ->

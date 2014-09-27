@@ -38,8 +38,7 @@ kPolarStarIndex = 2
 
 # Projectile sprite sources
 kProjectileSrcYs = [ 2, 2, 3 ]
-kProjectileSrcXs = [ 8, 9, 8 ]
-
+kProjectileSrcXs = [ 8, 10, 8 ]
 
 # Projectile nozzle offsets (game units)
 kNozzleHorizY      = 23
@@ -55,10 +54,11 @@ kNozzleDownLeftX  = 29
 kNozzleDownRightX = 19
 
 # Projectile properties
-kL1Lifespan        = 7 * kHalfTile
-kL1Speed           = 0.6
-kL1CollisionWidth  = 32
-kL1CollisionHeight = 4
+kLifespans        = [ tile-to-game(3.5), tile-to-game(5), tile-to-game(7) ]
+kSpeeds           = [ 0.6, 0.6, 0.6 ]
+kCollisionWidths  = [ 32, 32, 32 ]
+kCollisionHeights = [ 4, 8, 16 ]
+kDamages          = [ 1, 2, 4 ]
 
 # Firing direction modes
 
@@ -68,22 +68,22 @@ kL1CollisionHeight = 4
 # Private Class: Projectile
 
 class PolarStarProjectile extends Projectile
-  (@sprite, state, x, y) ->
-    super 1
+  (@sprite, state, x, y, @gun-level) ->
+    super kDamages[@gun-level - 1]
 
     @offset   = 0
-    @lifespan = kL1Lifespan
+    @lifespan = kLifespans[@gun-level - 1]
     @alive    = yes
 
     std.log 'SFX: Pew!'
 
     if state.HORIZONTAL
-      @width  = kL1CollisionWidth
-      @height = kL1CollisionHeight
+      @width  = kCollisionWidths[@gun-level - 1]
+      @height = kCollisionHeights[@gun-level - 1]
       @vertical = no
     else
-      @width  = kL1CollisionHeight
-      @height = kL1CollisionWidth
+      @width  = kCollisionHeights[@gun-level - 1]
+      @height = kCollisionWidths[@gun-level - 1]
       @vertical = yes
 
     # Just so we can get it later
@@ -104,20 +104,12 @@ class PolarStarProjectile extends Projectile
         else if state.DOWN       then -> y + @offset
 
   collision-rectangle: ->
-    # BUG:
-    # Why is this adjustment necessary? and why do I need kHalftile in one
-    # direction but not the other? If you enable graphics.visualise-rect you
-    # can see that the adjustment makes the collision box line up perfectly,
-    # but I don't know whats wrong that makes it necessary
-
-    adjust = 2
-
     new Rect @x + kHalfTile - @width / 2,
-      @y + @width / 2 - adjust,
+      @y + kHalfTile - @height / 2,
       @width, @height
 
   update: (elapsed-time, map, ptools) ->
-    @offset += kL1Speed * elapsed-time
+    @offset += kSpeeds[@gun-level - 1] * elapsed-time
 
     for tile in map.get-colliding-tiles @collision-rectangle!
       if tile.type is WALL_TILE
@@ -150,7 +142,7 @@ class PolarStarProjectile extends Projectile
 
   draw: (graphics) ->
     @sprite.draw graphics, @x, @y
-    #graphics.visualiseRect @collision-rectangle!
+    graphics.visualiseRect @collision-rectangle!
 
   collide-with-enemy: ->
     @alive = false
@@ -169,11 +161,17 @@ export class PolarStar
     @projectile-a = null
     @projectile-b = null
     @sprites = @initialise-sprites graphics
+    @current-level = 1
 
-    @hp-sprite = new Sprite graphics, \bullet,
-      tpx(kProjectileSrcXs.0), tpx(kProjectileSrcYs.0), tpx(1), tpx(1)
-    @vp-sprite = new Sprite graphics, \bullet,
-      tpx(kProjectileSrcXs.0 + 1), tpx(kProjectileSrcYs.0), tpx(1), tpx(1)
+    @hp-sprites =
+      for lvl from 0 to units.kMaxGunLevel
+        new Sprite graphics, \bullet,
+          tpx(kProjectileSrcXs[lvl]), tpx(kProjectileSrcYs[lvl]), tpx(1), tpx(1)
+
+    @vp-sprites =
+      for lvl from 0 to units.kMaxGunLevel
+        new Sprite graphics, \bullet,
+          tpx(kProjectileSrcXs[lvl]+1), tpx(kProjectileSrcYs[lvl]), tpx(1), tpx(1)
 
   initialise-sprites: (graphics) ->
     SpriteState.generate-with (state) ->
@@ -210,15 +208,19 @@ export class PolarStar
       bullet-x += if state.LEFT then kNozzleDownLeftX  else kNozzleDownRightX
 
     # Use next available projectile
+    sprite =
+      if state.HORIZONTAL
+        @hp-sprites[@current-level - 1]
+      else
+        @vp-sprites[@current-level - 1]
+
     if not @projectile-a
       @projectile-a =
-        new PolarStarProjectile (if state.HORIZONTAL then @hp-sprite else @vp-sprite),
-          state, bullet-x, bullet-y
+        new PolarStarProjectile sprite, state, bullet-x, bullet-y, @current-level
 
     else if not @projectile-b
       @projectile-b =
-        new PolarStarProjectile (if state.HORIZONTAL then @hp-sprite else @vp-sprite),
-          state, bullet-x, bullet-y
+        new PolarStarProjectile sprite, state, bullet-x, bullet-y, @current-level
 
   stop-fire: ->
 
@@ -260,4 +262,7 @@ export class PolarStar
 
     @projectile-a?.draw graphics
     @projectile-b?.draw graphics
+
+  draw-hud: (graphics, hud) ->
+    hud.draw graphics, @current-level, 0, 10
 

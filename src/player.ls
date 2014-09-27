@@ -10,13 +10,14 @@ require! \./readout
 
 { kHalfTile, tile-to-game, tile-to-px: tpx } = units
 
-{ WALL_TILE }       = require \./map
-{ Timer }           = require \./timer
-{ Health }          = require \./health
-{ Damageable }      = require \./damageable
-{ DamageText }      = require \./damage-text
-{ DamageTexts }     = require \./damage-texts
-{ PolarStar }       = require \./arms
+{ WALL_TILE }        = require \./map
+{ Timer }            = require \./timer
+{ Health }           = require \./health
+{ Damageable }       = require \./damageable
+{ DamageText }       = require \./damage-text
+{ DamageTexts }      = require \./damage-texts
+{ PolarStar }        = require \./arms
+{ GunExperienceHUD } = require \./gun-xp-hud
 
 { SpriteState, State } = require \./spritestate
 { Rectangle: Rect }    = require \./rectangle
@@ -127,6 +128,7 @@ export class Player extends Damageable
 
     # HUD
     @health = new Health graphics
+    @gun-hud = new GunExperienceHUD graphics
 
     # Sprites
     @sprites = @initialise-sprites graphics
@@ -274,6 +276,7 @@ export class Player extends Damageable
 
   draw-hud: (graphics) ->
     return unless @sprite-is-visible!
+    @gun.draw-hud graphics, @gun-hud
     @health.draw graphics
 
   get-sprite-state: ->
