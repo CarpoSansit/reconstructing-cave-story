@@ -22,6 +22,8 @@ require! \./readout
 { SpriteState, State } = require \./spritestate
 { Sprite, AnimatedSprite, NumberSprite } = require \./sprite
 
+{ HeadBumpParticle } = require \./head-bump-particle
+
 # Animation constants
 kCharacterFrame = 0
 kWalkFrame      = 0
@@ -163,12 +165,12 @@ export class Player extends Damageable
           units.tile-to-px(tile-x), units.tile-to-px(tile-y),
           units.tile-to-px(1), units.tile-to-px(1)
 
-  update: (elapsed-time, map) ->
+  update: (elapsed-time, map, ptools) ->
     @sprites[@get-sprite-state!key].update elapsed-time
     @health.update elapsed-time
     @gun.update-projectiles elapsed-time, map
     @update-x elapsed-time, map
-    @update-y elapsed-time, map
+    @update-y elapsed-time, map, ptools
     @walk-animation.update elapsed-time
 
   update-x: (elapsed-time, map) ->
@@ -213,7 +215,7 @@ export class Player extends Damageable
           @x = units.tile-to-game(tile.col) - kCollisionX.right
 
 
-  update-y: (elapsed-time, map) ->
+  update-y: (elapsed-time, map, ptools) ->
     gravity = if @jump-active and @velocity-y < 0 then kJumpGravity else kGravity
     @velocity-y = std.min @velocity-y + gravity * elapsed-time, kMaxSpeedY
 
@@ -240,6 +242,8 @@ export class Player extends Damageable
         if tile
           @y = units.tile-to-game(tile.row) + kCollisionYHeight
           @velocity-y = 0
+          ptools.system.add-new-particle new HeadBumpParticle ptools.graphics,
+            @center-x, @y + kCollisionYTop
         else
           @y += Δy
           @on-ground = no

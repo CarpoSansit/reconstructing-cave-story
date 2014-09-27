@@ -106,6 +106,7 @@ module.exports = class Map
     map.tiles[7][2]  = tile
     map.tiles[10][3] = tile
     map.tiles[10][0] = tile
+    map.tiles[8][10] = tile
 
     # Background tiles
     chain-top = new Sprite graphics, fg-path, tile-to-px(11), tile-to-px(2), tile-to-px(1), tile-to-px(1)

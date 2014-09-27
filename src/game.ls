@@ -18,13 +18,14 @@ Map    = require \./map
 
 { tile-to-game } = units
 
-{ Timer }            = require \./timer
-{ Player }           = require \./player
-{ Rectangle }        = require \./rectangle
-{ FirstCaveBat }     = require \./first-cave-bat
-{ FixedBackdrop }    = require \./backdrop
-{ DamageTexts }      = require \./damage-texts
-{ HeadBumpParticle } = require \./head-bump-particle
+{ Timer }          = require \./timer
+{ Player }         = require \./player
+{ Rectangle }      = require \./rectangle
+{ FirstCaveBat }   = require \./first-cave-bat
+{ FixedBackdrop }  = require \./backdrop
+{ DamageTexts }    = require \./damage-texts
+
+{ ParticleTools, ParticleSystem }  = require \./particle-system
 
 
 # Reference constants
@@ -34,11 +35,12 @@ Map    = require \./map
 
 # State
 
-running  = yes
-player   = null
-bat      = null
-map      = null
-particle = null
+running         = yes
+player          = null
+bat             = null
+map             = null
+particle-system = null
+ptools          = null
 
 time-factor      = 1
 last-frame-time  = 0
@@ -132,7 +134,7 @@ event-loop = ->
 # Game::update
 update = (elapsed-time) ->
   Timer.update-all elapsed-time
-  player.update elapsed-time, map
+  player.update elapsed-time, map, ptools
   if not bat?.update elapsed-time, player.x
     bat := null
 
@@ -150,7 +152,7 @@ update = (elapsed-time) ->
   # will suddenly exist which have not been updated, and will be drawn one
   # frame in their last known position
   DamageTexts.update elapsed-time
-  particle.update elapsed-time
+  particle-system.update elapsed-time
 
 # Game::draw
 draw = ->
@@ -160,15 +162,16 @@ draw = ->
   player.draw graphics
   map.draw graphics
   player.draw-hud graphics
-  particle.draw graphics
+  particle-system.draw graphics
   DamageTexts.draw graphics
 
 # Game::create-test-world
 create-test-world = ->
-  map      := Map.create-test-map graphics
-  player   := new Player graphics, units.tile-to-game(kScreenWidth/2), units.tile-to-game(10)
-  bat      := new FirstCaveBat graphics, units.tile-to-game(7), units.tile-to-game(8)
-  particle := new HeadBumpParticle graphics, units.tile-to-game(kScreenWidth/2), units.tile-to-game(kScreenHeight/2)
+  map    := Map.create-test-map graphics
+  player := new Player graphics, units.tile-to-game(kScreenWidth/2), units.tile-to-game(10)
+  bat    := new FirstCaveBat graphics, units.tile-to-game(7), units.tile-to-game(8)
+  particle-system := new ParticleSystem graphics
+  ptools := new ParticleTools graphics, particle-system
 
 # Game::start
 export start = ->

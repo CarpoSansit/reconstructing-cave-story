@@ -9,6 +9,7 @@ require! \./units
 { game-to-px } = units
 
 { Timer }       = require \./timer
+{ Particle }    = require \./particle
 { Sprite }      = require \./sprite
 { PolarVector } = require \./polar
 
@@ -21,14 +22,14 @@ kSourceWidth  = 6
 kSourceHeight = 6
 
 kFlashPeriod  = 25
-kLifeTime     = 1
+kLifeTime     = 700
 
-kSpeed        = 0.06  # game units per ms
+kSpeed        = 0.12  # game units per ms
 
 
 # HeadBumpParticle class
 
-export class HeadBumpParticle
+export class HeadBumpParticle extends Particle
 
   (graphics, @center-x, @center-y) ->
     @life-timer = new Timer kLifeTime, true
@@ -46,7 +47,7 @@ export class HeadBumpParticle
   update: (elapsed-time) ->
     @particle-a.mag = std.min @max-offset-a, @particle-a.mag + elapsed-time * kSpeed
     @particle-b.mag = std.min @max-offset-b, @particle-b.mag + elapsed-time * kSpeed
-    return @life-timer.active
+    return @life-timer.active!
 
   draw: (graphics) ->
     if (@life-timer.current-time / kFlashPeriod) % 2 < 1

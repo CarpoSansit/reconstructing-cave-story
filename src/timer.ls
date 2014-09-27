@@ -23,12 +23,8 @@ export class Timer
   reset: ->
     @current-time = 0
 
-  is-active:~ ->
-    @current-time < @expiration-time
-
-  is-expired:~ ->
-    not @is-active
-
+  is-active:~ -> @current-time < @expiration-time
+  is-expired:~ -> not @is-active
   active: -> @current-time < @expiration-time
   expired: -> not (@current-time < @expiration-time)
 
