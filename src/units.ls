@@ -18,6 +18,7 @@ export Pixel    = std.floor            # Discrete
 export Tile     = std.abs . std.floor  # Discrete, non-negative
 export Degrees  = std.id               # Circular
 export GunLevel = std.floor            # Discrete
+export GunXP    = std.floor            # Discrete
 
 # Time
 export FPS = std.id  # Hertz

@@ -173,7 +173,7 @@ draw = ->
   player.draw-hud graphics
   ptools.front-system.draw graphics
   DamageTexts.draw graphics
-  xp-hud.draw graphics, 2
+  xp-hud.draw graphics, 1, 0, 10
 
 # Game::create-test-world
 create-test-world = ->

@@ -32,29 +32,39 @@ kSpriteName = \TextBox
 
 kBarSrc   = new SpriteSource 0.0, 4.5, 2.5, 0.5
 kFlashSrc = new SpriteSource 2.5, 5.0, 2.5, 0.5
+kFillSrc  = new SpriteSource 0.0, 5.0, 2.5, 0.5
+kMaxSrc   = new SpriteSource 2.5, 4.5, 2.5, 0.5
 kLvSrc    = x: tile-to-px(5), y: game-to-px(160), w: tile-to-px(1), h: tile-to-px 0.5
 
 
 # GunExperienceHUD
 
 export class GunExperienceHUD
-
-  (graphics) ->
+  (graphics, level-xp, max-xp) ->
     @xp-bar-sprite = new Sprite graphics, kSpriteName, kBarSrc
     @lv-sprite     = new Sprite graphics, kSpriteName, kLvSrc
     @flash-sprite  = new Sprite graphics, kSpriteName, kFlashSrc
+    @max-sprite    = new Sprite graphics, kSpriteName, kMaxSrc
+    @fill-sprite   = new VaryingWidthSprite graphics, kSpriteName, kFillSrc
     @flash-timer   = new Timer kFlashTime
 
   activate-flash: ->
     @flash-timer.reset!
 
-  draw: (graphics, gun-lvl) ->
+  draw: (graphics, gun-lvl, current-xp, level-xp) ->
+
     @lv-sprite.draw     graphics, kLvDrawX,  kDrawY
     @xp-bar-sprite.draw graphics, kBarDrawX, kDrawY
+
     lvl-num-sprite = NumberSprite.HUDNumber graphics, gun-lvl, 1
     lvl-num-sprite.draw graphics, kLvlNumDrawX, kDrawY
 
+    if current-xp < level-xp
+      @fill-sprite.set-percentage-width current-xp / level-xp
+      @fill-sprite.draw graphics, kBarDrawX, kDrawY
+    else
+      @max-sprite.draw  graphics, kBarDrawX, kDrawY
+
     if @flash-timer.is-active and (@flash-timer.current-time `div` kFlashPeriod) % 2 is 0
       @flash-sprite.draw graphics, kBarDrawX, kDrawY
-
 
