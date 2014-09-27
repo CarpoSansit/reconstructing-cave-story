@@ -26,6 +26,7 @@ Map    = require \./map
 { DamageTexts }    = require \./damage-texts
 
 { ParticleTools, ParticleSystem }  = require \./particle-system
+{ StarParticle } = require \./star-particle
 
 
 # Reference constants

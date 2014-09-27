@@ -8,9 +8,9 @@ require! \./units
 
 { tile-to-px, game-to-px, tile-to-game } = units
 
-{ Sprite }          = require \./sprite
-{ FixedBackdrop }   = require \./backdrop
-{ Rectangle: Rect } = require \./rectangle
+{ Sprite }        = require \./sprite
+{ FixedBackdrop } = require \./backdrop
+{ SpriteSource }  = require \./rectangle
 
 
 # Constants
@@ -91,9 +91,7 @@ module.exports = class Map
     row = 11
 
     # Basic block
-    tile = new Tile WALL_TILE, new Sprite graphics, fg-path,
-      tile-to-px(1), 0,
-      tile-to-px(1), tile-to-px(1)
+    tile = new Tile WALL_TILE, new Sprite graphics, fg-path, new SpriteSource 1, 0, 1, 1
 
     # Floor
     for col from 0 to num-cols

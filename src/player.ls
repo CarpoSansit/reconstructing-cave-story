@@ -11,7 +11,6 @@ require! \./readout
 { kHalfTile, tile-to-game, tile-to-px } = units
 
 { WALL_TILE }       = require \./map
-{ Rectangle: Rect } = require \./rectangle
 { Timer }           = require \./timer
 { Health }          = require \./health
 { Damageable }      = require \./damageable
@@ -20,6 +19,7 @@ require! \./readout
 { PolarStar }       = require \./arms
 
 { SpriteState, State } = require \./spritestate
+{ Rectangle: Rect, SpriteSource } = require \./rectangle
 { Sprite, AnimatedSprite, NumberSprite } = require \./sprite
 
 { HeadBumpParticle } = require \./head-bump-particle
@@ -157,18 +157,13 @@ export class Player extends Damageable
           | state.STRIDE_RIGHT  => kStrideRightFrameOffset
           | state.STRIDE_MIDDLE => kStrideMiddleFrameOffset
           | otherwise => void
-        new Sprite graphics, \MyChar,
-          units.tile-to-px(tile-x), units.tile-to-px(tile-y),
-          units.tile-to-px(1), units.tile-to-px(1)
-      else
-        new Sprite graphics, \MyChar,
-          units.tile-to-px(tile-x), units.tile-to-px(tile-y),
-          units.tile-to-px(1), units.tile-to-px(1)
+
+      new Sprite graphics, \MyChar, new SpriteSource tile-x, tile-y, 1, 1
 
   update: (elapsed-time, map, ptools) ->
     @sprites[@get-sprite-state!key].update elapsed-time
     @health.update elapsed-time
-    @gun.update-projectiles elapsed-time, map
+    @gun.update-projectiles elapsed-time, map, ptools
     @update-x elapsed-time, map
     @update-y elapsed-time, map, ptools
     @walk-animation.update elapsed-time

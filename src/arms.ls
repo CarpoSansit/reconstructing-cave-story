@@ -13,9 +13,11 @@ require! \./units
 
 { WALL_TILE }          = require \./map
 { Sprite }             = require \./sprite
-{ Rectangle: Rect }    = require \./rectangle
 { SpriteState, State } = require \./spritestate
 { Projectile }         = require \./projectile
+{ StarParticle }       = require \./star-particle
+
+{ Rectangle: Rect, SpriteSource } = require \./rectangle
 
 
 # Assets
@@ -34,9 +36,8 @@ kLeftOffset       = 0
 kPolarStarIndex = 2
 
 # Projectile sprite tiles
-kProjectileSourceY         = 2
-kHorizProjectileSourceX    = 8
-kVerticalProjectileSourceX = 9
+kProjectileSrcHorizontal = new SpriteSource 8, 2, 1, 1
+kProjectileSrcVertical   = new SpriteSource 9, 2, 1, 1
 
 # Projectile nozzle offsets (game units)
 kNozzleHorizY      = 23
@@ -56,6 +57,7 @@ kL1Lifespan        = 7 * kHalfTile
 kL1Speed           = 0.6
 kL1CollisionWidth  = 32
 kL1CollisionHeight = 4
+
 
 
 # Private Class: Projectile
@@ -96,12 +98,20 @@ class PolarStarProjectile extends Projectile
       @y + @width / 2 - adjust,
       @width, @height
 
-  update: (elapsed-time, map) ->
+  update: (elapsed-time, map, ptools) ->
     @offset += kL1Speed * elapsed-time
     for tile in map.get-colliding-tiles @collision-rectangle!
       if tile.type is WALL_TILE
         return false
-    return @alive and @offset < @lifespan
+
+    # Report status
+    if not @alive
+      false
+    else if @offset >= @lifespan
+      ptools.system.add-new-particle new StarParticle ptools.graphics, @x, @y
+      false
+    else
+      true
 
   draw: (graphics) ->
     @sprite.draw graphics, @x, @y
@@ -110,9 +120,11 @@ class PolarStarProjectile extends Projectile
   collide-with-enemy: ->
     @alive = false
 
+
 # Arms abstract class
 #
 # Not currently needed
+
 
 # Polar Star
 
@@ -123,13 +135,8 @@ export class PolarStar
     @projectile-b = null
     @sprites = @initialise-sprites graphics
 
-    @hp-sprite = new Sprite graphics, \bullet,
-      tile-to-px(kHorizProjectileSourceX), tile-to-px(kProjectileSourceY),
-      tile-to-px(1), tile-to-px(1)
-
-    @vp-sprite = new Sprite graphics, \bullet,
-      tile-to-px(kVerticalProjectileSourceX), tile-to-px(kProjectileSourceY),
-      tile-to-px(1), tile-to-px(1)
+    @hp-sprite = new Sprite graphics, \bullet, kProjectileSrcHorizontal
+    @vp-sprite = new Sprite graphics, \bullet, kProjectileSrcVertical
 
   initialise-sprites: (graphics) ->
     SpriteState.generate-with (state) ->
@@ -141,8 +148,8 @@ export class PolarStar
       | state.DOWN       => tile-y += kDownOffset
 
       new Sprite graphics, kArmsSpritePath,
-        tile-to-px(kPolarStarIndex * kSpriteWidth), tile-to-px(tile-y),
-        tile-to-px(kSpriteWidth), tile-to-px(kSpriteHeight)
+        new SpriteSource kPolarStarIndex * kSpriteWidth,
+          tile-y, kSpriteWidth, kSpriteHeight
 
   start-fire: (state, player-x, player-y) ->
 
@@ -198,13 +205,14 @@ export class PolarStar
     if @projectile-b then projectiles.push that
     return projectiles
 
+
   # Update methods
 
-  update-projectiles: (elapsed-time, map) ->
-    if not @projectile-a?.update elapsed-time, map
+  update-projectiles: (elapsed-time, map, ptools) ->
+    if not @projectile-a?.update elapsed-time, map, ptools
       @projectile-a = null
 
-    if not @projectile-b?.update elapsed-time, map
+    if not @projectile-b?.update elapsed-time, map, ptools
       @projectile-b = null
 
   draw: (graphics, player-x, player-y, state) ->

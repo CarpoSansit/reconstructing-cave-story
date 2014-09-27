@@ -20,17 +20,14 @@ require! \./units
 
 export class Sprite
 
-  # Sprite (Graphics, String, Pixel, Pixel, Pixel, Pixel)
-  (graphics, path, source-x, source-y, @width, @height) ->
-    @source-rect  = new SDL.Rect source-x, source-y, width, height
+  (graphics, path, @src) ->
+    @source-rect  = new SDL.Rect.clone @src
     @sprite-sheet = graphics.load-image path, true
 
-  # Sprite::update (abstract)
   update: ->
 
-  # Sprite::draw (Graphics, GameUnit, GameUnit)
   draw: (graphics, x, y) ->
-    dest-rect = new SDL.Rect units.game-to-px(x), units.game-to-px(y), @width, @height
+    dest-rect = new SDL.Rect game-to-px(x), game-to-px(y), @src.w, @src.h
     graphics.blit-surface @sprite-sheet, @source-rect, dest-rect
 
 
@@ -40,28 +37,28 @@ export class Sprite
 
 export class AnimatedSprite extends Sprite
 
-  # AnimatedSprite (Graphics, String, Pixel, Pixel, Pixel, Pixel, FSP, Number)
-  (graphics, path, source-x, source-y, @width, @height, @fps, @keyframes) ->
+  (graphics, path, @src, @fps, @keyframes) ->
 
     super ...
 
     @frame-timer      = new Timer 1000 / @fps
     @current-frame    = 0
     @current-keyframe = @keyframes[0]
-    @origin-x         = @source-rect.x
+    @origin-x         = @src.x
+    @num-completed-loops = 0
 
-  # Sprite::draw (Graphics, GameUnit, GameUnit, Number)
   draw: (graphics, x, y, frame-offset = @current-keyframe) ->
     @source-rect.x = @origin-x + frame-offset * @source-rect.w
-    dest-rect = new SDL.Rect units.game-to-px(x), units.game-to-px(y), @width, @height
+    dest-rect = new SDL.Rect game-to-px(x), game-to-px(y), @src.w, @src.h
     graphics.blit-surface @sprite-sheet, @source-rect, dest-rect
 
-  # Update (ms)
   update: ->
     if @frame-timer.is-expired
       @frame-timer.reset!
       @current-frame += 1
-      if @current-frame >= @keyframes.length then @current-frame = 0
+      if @current-frame >= @keyframes.length
+        @num-completed-loops += 1
+        @current-frame = 0
       @current-keyframe = @keyframes[ @current-frame ]
 
 
