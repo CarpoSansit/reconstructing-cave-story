@@ -144,10 +144,13 @@ export class NumberSprite
 
 export class VaryingWidthSprite extends Sprite
 
-  (graphics, path, @src) ->
+  (graphics, path, @src, @max-width = @src.w) ->
     super ...
 
   set-width: (width) ->
     @src.w = width
+
+  set-percentage-width: (fraction) ->
+    @src.w = fraction * @max-width
 
 

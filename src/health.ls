@@ -47,16 +47,10 @@ export class Health
 
     # Sprites
     @health-bar-sprite  = new Sprite graphics, kSpritePath, kHealthBarSrc
-    @health-fill-sprite = new VaryingWidthSprite graphics, kSpritePath, kHealthFillSrc
-    @damage-fill-sprite = new VaryingWidthSprite graphics, kSpritePath, kDamageFillSrc
-
-  take-damage: (damage) ->
-    return if @current-health is 0
-    @damage-timer.reset!
-    @health-fill-sprite.set-width @fill-offset @current-health - damage
-    @damage-fill-sprite.set-width @fill-offset damage
-    @damage = damage
-    return @current-health - damage <= 0
+    @health-fill-sprite = new VaryingWidthSprite graphics,
+      kSpritePath, kHealthFillSrc, kHealthFillSrc.w
+    @damage-fill-sprite = new VaryingWidthSprite graphics,
+      kSpritePath, kDamageFillSrc, kDamageFillSrc.w
 
   update: (elapsed-time) ->
     if @damage > 0 and @damage-timer.is-expired
@@ -70,12 +64,20 @@ export class Health
     @health-bar-sprite.draw  graphics, kHealthBarX, kHealthBarY
 
     unless @current-health is 0
-      @health-fill-sprite.draw graphics, kHealthFillX, kHealthFillY
 
       if @damage
-        x = kHealthFillX + px-to-game @fill-offset @current-health - @damage
-        @damage-fill-sprite.draw graphics, x, kHealthFillY
+        @damage-fill-sprite.draw graphics, kHealthFillX, kHealthFillY
+
+      @health-fill-sprite.draw graphics, kHealthFillX, kHealthFillY
 
     (new NumberSprite.HUDNumber graphics, @current-health, 2).draw graphics,
       kHealthNumX,  kHealthNumY
+
+  take-damage: (damage) ->
+    return if @current-health is 0
+    @damage-timer.reset!
+    @health-fill-sprite.set-percentage-width (@current-health - damage) / @max-health
+    @damage-fill-sprite.set-percentage-width @current-health / @max-health
+    @damage = damage
+    return @current-health - damage <= 0
 
