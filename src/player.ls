@@ -64,6 +64,7 @@ kCollisionYTopLeft     = (tile-to-game(1) - kCollisionYTopWidth) / 2
 kCollisionYBottomLeft  = (tile-to-game(1) - kCollisionYBottomWidth) / 2
 kCollisionYBottom      = kCollisionYTop + kCollisionYHeight
 
+
 # Private class: WalkingAnimation
 
 class WalkingAnimation

@@ -18,12 +18,13 @@ Map    = require \./map
 
 { tile-to-game } = units
 
-{ Timer }         = require \./timer
-{ Player }        = require \./player
-{ Rectangle }     = require \./rectangle
-{ FirstCaveBat }  = require \./first-cave-bat
-{ FixedBackdrop } = require \./backdrop
-{ DamageTexts }   = require \./damage-texts
+{ Timer }            = require \./timer
+{ Player }           = require \./player
+{ Rectangle }        = require \./rectangle
+{ FirstCaveBat }     = require \./first-cave-bat
+{ FixedBackdrop }    = require \./backdrop
+{ DamageTexts }      = require \./damage-texts
+{ HeadBumpParticle } = require \./head-bump-particle
 
 
 # Reference constants
@@ -37,6 +38,7 @@ running  = yes
 player   = null
 bat      = null
 map      = null
+particle = null
 
 time-factor      = 1
 last-frame-time  = 0
@@ -148,6 +150,7 @@ update = (elapsed-time) ->
   # will suddenly exist which have not been updated, and will be drawn one
   # frame in their last known position
   DamageTexts.update elapsed-time
+  particle.update elapsed-time
 
 # Game::draw
 draw = ->
@@ -157,14 +160,15 @@ draw = ->
   player.draw graphics
   map.draw graphics
   player.draw-hud graphics
+  particle.draw graphics
   DamageTexts.draw graphics
 
 # Game::create-test-world
 create-test-world = ->
-  map    := Map.create-test-map graphics
-  player := new Player graphics, units.tile-to-game(kScreenWidth/2), units.tile-to-game(10)
-  bat    := new FirstCaveBat graphics, units.tile-to-game(7), units.tile-to-game(8)
-
+  map      := Map.create-test-map graphics
+  player   := new Player graphics, units.tile-to-game(kScreenWidth/2), units.tile-to-game(10)
+  bat      := new FirstCaveBat graphics, units.tile-to-game(7), units.tile-to-game(8)
+  particle := new HeadBumpParticle graphics, units.tile-to-game(kScreenWidth/2), units.tile-to-game(kScreenHeight/2)
 
 # Game::start
 export start = ->
