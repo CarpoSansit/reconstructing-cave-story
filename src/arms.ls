@@ -9,13 +9,16 @@
 require! \std
 require! \./units
 
-{ kHalfTile, tile-to-px, tile-to-game, game-to-px } = units
+{ kHalfTile, tile-to-px:tpx, tile-to-game, game-to-px } = units
 
 { WALL_TILE }          = require \./map
 { Sprite }             = require \./sprite
-{ Rectangle: Rect }    = require \./rectangle
 { SpriteState, State } = require \./spritestate
 { Projectile }         = require \./projectile
+{ StarParticle }       = require \./star-particle
+{ WallParticle }       = require \./wall-particle
+
+{ Rectangle: Rect } = require \./rectangle
 
 
 # Assets
@@ -33,10 +36,9 @@ kLeftOffset       = 0
 # Weapon tile offsets
 kPolarStarIndex = 2
 
-# Projectile sprite tiles
-kProjectileSourceY         = 2
-kHorizProjectileSourceX    = 8
-kVerticalProjectileSourceX = 9
+# Projectile sprite sources
+kProjectileSrcYs = [ 2, 2, 3 ]
+kProjectileSrcXs = [ 8, 10, 8 ]
 
 # Projectile nozzle offsets (game units)
 kNozzleHorizY      = 23
@@ -52,26 +54,44 @@ kNozzleDownLeftX  = 29
 kNozzleDownRightX = 19
 
 # Projectile properties
-kL1Lifespan        = 7 * kHalfTile
-kL1Speed           = 0.6
-kL1CollisionWidth  = 32
-kL1CollisionHeight = 4
+kLifespans        = [ tile-to-game(3.5), tile-to-game(5), tile-to-game(7) ]
+kSpeeds           = [ 0.6, 0.6, 0.6 ]
+kCollisionWidths  = [ 32, 32, 32 ]
+kCollisionHeights = [ 4, 8, 16 ]
+kDamages          = [ 1, 2, 4 ]
+
+# Firing direction modes
+
+[ UP, DOWN, LEFT, RIGHT ] = std.enum
 
 
 # Private Class: Projectile
 
 class PolarStarProjectile extends Projectile
-  (@sprite, state, x, y) ->
-    super 1
+  (@sprite, state, x, y, @gun-level) ->
+    super kDamages[@gun-level - 1]
 
     @offset   = 0
-    @lifespan = kL1Lifespan
+    @lifespan = kLifespans[@gun-level - 1]
     @alive    = yes
 
     std.log 'SFX: Pew!'
 
-    @width  = if state.HORIZONTAL then kL1CollisionWidth  else kL1CollisionHeight
-    @height = if state.HORIZONTAL then kL1CollisionHeight else kL1CollisionWidth
+    if state.HORIZONTAL
+      @width  = kCollisionWidths[@gun-level - 1]
+      @height = kCollisionHeights[@gun-level - 1]
+      @vertical = no
+    else
+      @width  = kCollisionHeights[@gun-level - 1]
+      @height = kCollisionWidths[@gun-level - 1]
+      @vertical = yes
+
+    # Just so we can get it later
+    @mode = switch true
+    | state.UP    => UP
+    | state.DOWN  => DOWN
+    | state.LEFT  => LEFT
+    | state.RIGHT => RIGHT
 
     Object.define-properties this, do
       x: get:
@@ -84,35 +104,54 @@ class PolarStarProjectile extends Projectile
         else if state.DOWN       then -> y + @offset
 
   collision-rectangle: ->
-    # BUG:
-    # Why is this adjustment necessary? and why do I need kHalftile in one
-    # direction but not the other? If you enable graphics.visualise-rect you
-    # can see that the adjustment makes the collision box line up perfectly,
-    # but I don't know whats wrong that makes it necessary
-
-    adjust = 2
-
     new Rect @x + kHalfTile - @width / 2,
-      @y + @width / 2 - adjust,
+      @y + kHalfTile - @height / 2,
       @width, @height
 
-  update: (elapsed-time, map) ->
-    @offset += kL1Speed * elapsed-time
+  update: (elapsed-time, map, ptools) ->
+    @offset += kSpeeds[@gun-level - 1] * elapsed-time
+
     for tile in map.get-colliding-tiles @collision-rectangle!
       if tile.type is WALL_TILE
+        tile-rect = new Rect tile-to-game(tile.col), tile-to-game(tile.row),
+          tile-to-game(1), tile-to-game(1)
+
+        particle-x = @x
+        particle-y = @y
+
+        switch @mode
+        | UP =>    particle-y = tile-rect.bottom - kHalfTile
+        | DOWN =>  particle-y = tile-rect.top - kHalfTile
+        | LEFT =>  particle-x = tile-rect.right - kHalfTile
+        | RIGHT => particle-x = tile-rect.left - kHalfTile
+
+        ptools.front-system.add-new-particle new WallParticle ptools.graphics,
+          particle-x, particle-y
+
+        # Die (as a function AND as a particle) before end of for loop
         return false
-    return @alive and @offset < @lifespan
+
+    # Report status
+    if not @alive
+      false
+    else if @offset >= @lifespan
+      ptools.front-system.add-new-particle new StarParticle ptools.graphics, @x, @y
+      false
+    else
+      true
 
   draw: (graphics) ->
     @sprite.draw graphics, @x, @y
-    #graphics.visualiseRect @collision-rectangle!
+    graphics.visualiseRect @collision-rectangle!
 
   collide-with-enemy: ->
     @alive = false
 
+
 # Arms abstract class
 #
 # Not currently needed
+
 
 # Polar Star
 
@@ -122,14 +161,17 @@ export class PolarStar
     @projectile-a = null
     @projectile-b = null
     @sprites = @initialise-sprites graphics
+    @current-level = 1
 
-    @hp-sprite = new Sprite graphics, \Bullet,
-      tile-to-px(kHorizProjectileSourceX), tile-to-px(kProjectileSourceY),
-      tile-to-px(1), tile-to-px(1)
+    @hp-sprites =
+      for lvl from 0 to units.kMaxGunLevel
+        new Sprite graphics, \bullet,
+          tpx(kProjectileSrcXs[lvl]), tpx(kProjectileSrcYs[lvl]), tpx(1), tpx(1)
 
-    @vp-sprite = new Sprite graphics, \Bullet,
-      tile-to-px(kVerticalProjectileSourceX), tile-to-px(kProjectileSourceY),
-      tile-to-px(1), tile-to-px(1)
+    @vp-sprites =
+      for lvl from 0 to units.kMaxGunLevel
+        new Sprite graphics, \bullet,
+          tpx(kProjectileSrcXs[lvl]+1), tpx(kProjectileSrcYs[lvl]), tpx(1), tpx(1)
 
   initialise-sprites: (graphics) ->
     SpriteState.generate-with (state) ->
@@ -141,8 +183,8 @@ export class PolarStar
       | state.DOWN       => tile-y += kDownOffset
 
       new Sprite graphics, kArmsSpritePath,
-        tile-to-px(kPolarStarIndex * kSpriteWidth), tile-to-px(tile-y),
-        tile-to-px(kSpriteWidth), tile-to-px(kSpriteHeight)
+        tpx(kPolarStarIndex * kSpriteWidth),
+          tpx(tile-y), tpx(kSpriteWidth), tpx(kSpriteHeight)
 
   start-fire: (state, player-x, player-y) ->
 
@@ -166,15 +208,19 @@ export class PolarStar
       bullet-x += if state.LEFT then kNozzleDownLeftX  else kNozzleDownRightX
 
     # Use next available projectile
+    sprite =
+      if state.HORIZONTAL
+        @hp-sprites[@current-level - 1]
+      else
+        @vp-sprites[@current-level - 1]
+
     if not @projectile-a
       @projectile-a =
-        new PolarStarProjectile (if state.HORIZONTAL then @hp-sprite else @vp-sprite),
-          state, bullet-x, bullet-y
+        new PolarStarProjectile sprite, state, bullet-x, bullet-y, @current-level
 
     else if not @projectile-b
       @projectile-b =
-        new PolarStarProjectile (if state.HORIZONTAL then @hp-sprite else @vp-sprite),
-          state, bullet-x, bullet-y
+        new PolarStarProjectile sprite, state, bullet-x, bullet-y, @current-level
 
   stop-fire: ->
 
@@ -198,13 +244,14 @@ export class PolarStar
     if @projectile-b then projectiles.push that
     return projectiles
 
+
   # Update methods
 
-  update-projectiles: (elapsed-time, map) ->
-    if not @projectile-a?.update elapsed-time, map
+  update-projectiles: (elapsed-time, map, ptools) ->
+    if not @projectile-a?.update elapsed-time, map, ptools
       @projectile-a = null
 
-    if not @projectile-b?.update elapsed-time, map
+    if not @projectile-b?.update elapsed-time, map, ptools
       @projectile-b = null
 
   draw: (graphics, player-x, player-y, state) ->
@@ -215,4 +262,7 @@ export class PolarStar
 
     @projectile-a?.draw graphics
     @projectile-b?.draw graphics
+
+  draw-hud: (graphics, hud) ->
+    hud.draw graphics, @current-level, 0, 10
 

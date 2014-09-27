@@ -18,12 +18,16 @@ Map    = require \./map
 
 { tile-to-game } = units
 
-{ Timer }         = require \./timer
-{ Player }        = require \./player
-{ Rectangle }     = require \./rectangle
-{ FirstCaveBat }  = require \./first-cave-bat
-{ FixedBackdrop } = require \./backdrop
-{ DamageTexts }   = require \./damage-texts
+{ Timer }          = require \./timer
+{ Player }         = require \./player
+{ Rectangle }      = require \./rectangle
+{ FirstCaveBat }   = require \./first-cave-bat
+{ FixedBackdrop }  = require \./backdrop
+{ DamageTexts }    = require \./damage-texts
+
+{ ParticleTools, ParticleSystem }  = require \./particle-system
+{ StarParticle } = require \./star-particle
+{ DeathCloudParticle } = require \./death-cloud-particle
 
 
 # Reference constants
@@ -33,14 +37,16 @@ Map    = require \./map
 
 # State
 
-running  = yes
-player   = null
-bat      = null
-map      = null
+running = yes
+player  = null
+bat     = null
+map     = null
+ptools  = null
 
 time-factor      = 1
 last-frame-time  = 0
 any-keys-pressed = no
+
 
 
 # Functions
@@ -131,7 +137,11 @@ event-loop = ->
 update = (elapsed-time) ->
   Timer.update-all elapsed-time
   player.update elapsed-time, map
-  if not bat?.update elapsed-time, player.x
+
+  # Bat died
+  if bat and not bat?.update elapsed-time, player.x
+    DeathCloudParticle.create-random-death-clouds ptools,
+      bat.center-x, bat.center-y, 3
     bat := null
 
   # Bullet-to-enemy collisions
@@ -148,6 +158,7 @@ update = (elapsed-time) ->
   # will suddenly exist which have not been updated, and will be drawn one
   # frame in their last known position
   DamageTexts.update elapsed-time
+  ptools.update elapsed-time
 
 # Game::draw
 draw = ->
@@ -155,16 +166,18 @@ draw = ->
   map.draw-background graphics
   bat?.draw graphics
   player.draw graphics
+  ptools.entity-system.draw graphics
   map.draw graphics
   player.draw-hud graphics
+  ptools.front-system.draw graphics
   DamageTexts.draw graphics
 
 # Game::create-test-world
 create-test-world = ->
   map    := Map.create-test-map graphics
-  player := new Player graphics, units.tile-to-game(kScreenWidth/2), units.tile-to-game(10)
+  ptools := new ParticleTools graphics
+  player := new Player graphics, units.tile-to-game(kScreenWidth/2), units.tile-to-game(10), ptools
   bat    := new FirstCaveBat graphics, units.tile-to-game(7), units.tile-to-game(8)
-
 
 # Game::start
 export start = ->

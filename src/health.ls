@@ -7,8 +7,10 @@ require! \std
 require! \./units
 
 { div } = std
-{ kHalfTile, tile-to-px, px-to-game, tile-to-game } = units
+{ kHalfTile, px-to-tile, tile-to-px:tpx, px-to-game, tile-to-game } = units
+
 { Timer } = require \./timer
+
 { Sprite, NumberSprite, VaryingWidthSprite } = require \./sprite
 
 
@@ -21,61 +23,62 @@ kHealthFillY = tile-to-game 2
 kHealthNumX  = tile-to-game 1.5
 kHealthNumY  = tile-to-game 2
 
-kMaxFillPx   = tile-to-px(2.5) - 1
-
+kMaxFillPx   = tpx(2.5) - 1
 kDamageDelay = 1500
-
 kSpritePath  = \TextBox
+
+# Sprite Sources
+
+kBarSrcX    = 0
+kBarSrcY    = 2.5
+kFillSrcY   = 1.5
+kDamageSrcY = 2
+
+kBarSrcWidth  = 4
+kBarSrcHeight = 0.5
+
 
 # Health class
 
 export class Health
 
-  # Health (Graphics)
   (graphics, @max-health = 6) ->
-
     @current-health = @max-health
     @damage = 0
     @damage-timer = new Timer kDamageDelay
 
     # Sprites
-    @health-bar-sprite = new Sprite graphics, kSpritePath,
-      0, tile-to-px(2.5), tile-to-px(4), tile-to-px(0.5)
+    @health-bar-sprite  = new Sprite graphics, kSpritePath,
+      tpx(kBarSrcX), tpx(kBarSrcY), tpx(kBarSrcWidth), tpx(kBarSrcHeight)
+
     @health-fill-sprite = new VaryingWidthSprite graphics, kSpritePath,
-      0, tile-to-px(1.5), kMaxFillPx, tile-to-px(0.5)
+      tpx(kBarSrcX), tpx(kFillSrcY), kMaxFillPx, tpx(kBarSrcHeight), kMaxFillPx
+
     @damage-fill-sprite = new VaryingWidthSprite graphics, kSpritePath,
-      0, tile-to-px(2.0), kMaxFillPx, tile-to-px(0.5)
+      tpx(kBarSrcX), tpx(kDamageSrcY), kMaxFillPx, tpx(kBarSrcHeight), kMaxFillPx
 
-  # Health::take-damage (HP) -> Bool
-  take-damage: (damage) ->
-    return if @current-health is 0
-    @damage-timer.reset!
-    @health-fill-sprite.set-width @fill-offset @current-health - damage
-    @damage-fill-sprite.set-width @fill-offset damage
-    @damage = damage
-    return @current-health - damage <= 0
 
-  # Health::update (ms)
   update: (elapsed-time) ->
     if @damage > 0 and @damage-timer.is-expired
       @current-health = std.max 0, @current-health - @damage
       @damage = 0
 
-  # Health::fill-offset (HP)
-  fill-offset: (health) ->
-    kMaxFillPx * (health / @max-health)
-
-  # Health::draw (Graphics)
   draw: (graphics) ->
-    @health-bar-sprite.draw  graphics, kHealthBarX,  kHealthBarY
+    @health-bar-sprite.draw graphics, kHealthBarX, kHealthBarY
 
     unless @current-health is 0
+      if @damage
+        @damage-fill-sprite.draw graphics, kHealthFillX, kHealthFillY
       @health-fill-sprite.draw graphics, kHealthFillX, kHealthFillY
 
-      if @damage
-        x = kHealthFillX + px-to-game @fill-offset @current-health - @damage
-        @damage-fill-sprite.draw graphics, x, kHealthFillY
-
     (new NumberSprite.HUDNumber graphics, @current-health, 2).draw graphics,
-      kHealthNumX,  kHealthNumY
+      kHealthNumX, kHealthNumY
+
+  take-damage: (damage) ->
+    return if @current-health is 0
+    @damage-timer.reset!
+    @health-fill-sprite.set-percentage-width (@current-health - damage) / @max-health
+    @damage-fill-sprite.set-percentage-width @current-health / @max-health
+    @damage = damage
+    return @current-health - damage <= 0
 

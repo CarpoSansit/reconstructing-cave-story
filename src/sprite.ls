@@ -8,7 +8,7 @@ require! \std
 require! \./units
 
 { div } = std
-{ kHalfTile, tile-to-px, game-to-px } = units
+{ kHalfTile, tile-to-px: tpx, game-to-px } = units
 
 { Timer } = require \./timer
 { Rectangle: Rect } = require \./rectangle
@@ -20,17 +20,14 @@ require! \./units
 
 export class Sprite
 
-  # Sprite (Graphics, String, Pixel, Pixel, Pixel, Pixel)
-  (graphics, path, source-x, source-y, @width, @height) ->
-    @source-rect  = new SDL.Rect source-x, source-y, width, height
+  (graphics, path, x, y, @w, @h) ->
+    @source-rect  = new Rect x, y, @w, @h
     @sprite-sheet = graphics.load-image path, true
 
-  # Sprite::update (abstract)
   update: ->
 
-  # Sprite::draw (Graphics, GameUnit, GameUnit)
   draw: (graphics, x, y) ->
-    dest-rect = new SDL.Rect units.game-to-px(x), units.game-to-px(y), @width, @height
+    dest-rect = new SDL.Rect game-to-px(x), game-to-px(y), @w, @h
     graphics.blit-surface @sprite-sheet, @source-rect, dest-rect
 
 
@@ -40,28 +37,29 @@ export class Sprite
 
 export class AnimatedSprite extends Sprite
 
-  # AnimatedSprite (Graphics, String, Pixel, Pixel, Pixel, Pixel, FSP, Number)
-  (graphics, path, source-x, source-y, @width, @height, @fps, @keyframes) ->
+  (graphics, path, src-x, src-y, @w, @h, @fps, @num-frames) ->
 
     super ...
 
     @frame-timer      = new Timer 1000 / @fps
+    @keyframes        = [ 0 til @num-frames ]
     @current-frame    = 0
     @current-keyframe = @keyframes[0]
-    @origin-x         = @source-rect.x
+    @origin-x         = src-x
+    @num-completed-loops = 0
 
-  # Sprite::draw (Graphics, GameUnit, GameUnit, Number)
   draw: (graphics, x, y, frame-offset = @current-keyframe) ->
     @source-rect.x = @origin-x + frame-offset * @source-rect.w
-    dest-rect = new SDL.Rect units.game-to-px(x), units.game-to-px(y), @width, @height
+    dest-rect = new SDL.Rect game-to-px(x), game-to-px(y), @w, @h
     graphics.blit-surface @sprite-sheet, @source-rect, dest-rect
 
-  # Update (ms)
   update: ->
     if @frame-timer.is-expired
       @frame-timer.reset!
       @current-frame += 1
-      if @current-frame >= @keyframes.length then @current-frame = 0
+      if @current-frame >= @keyframes.length
+        @num-completed-loops += 1
+        @current-frame = 0
       @current-keyframe = @keyframes[ @current-frame ]
 
 
@@ -70,15 +68,12 @@ export class AnimatedSprite extends Sprite
 # For drawing numbers like on the healt HUD
 
 export class NumberSprite
-
-  kDigitSrcY      = tile-to-px 3.5
-  kDigitSrcWidth  = tile-to-px 0.5
-  kDigitSrcHeight = tile-to-px 0.5
-  kOpPlusSrcX     = tile-to-px 2
-  kOpMinusSrcX    = tile-to-px 2.5
-  kOpSrcY         = tile-to-px 3
-  kDigitSize      = units.kHalfTile
-  kRadix          = 10
+  kDigitSrcY   = 3.5
+  kOpPlusSrcX  = 2
+  kOpMinusSrcX = 2.5
+  kOpSrcY      = 3
+  kDigitSize   = units.kHalfTile
+  kRadix       = 10
 
   [ WHITE, RED ] = std.enum
   [ PLUS, MINUS, NONE ] = std.enum
@@ -91,30 +86,28 @@ export class NumberSprite
   # wants. We don't handle the case where len lies about the number.
 
   (graphics, @num, @len, @color, @op) ->
-    @digits = NumberSprite.seperate-digits @num
+    @digits     = NumberSprite.seperate-digits @num
     @num-digits = @digits.length
-    @padding = if @len is 0 then 0 else kDigitSize * (@len - @num-digits)
+    @padding    = if @len is 0 then 0 else kDigitSize * (@len - @num-digits)
 
     # Choose color
-    srcY = if @color is WHITE then kDigitSrcY else kDigitSrcY + game-to-px kHalfTile
+    srcY = if @color is WHITE then kDigitSrcY else kDigitSrcY + 0.5
 
     @glyphs = @digits.map ->
-      new Sprite graphics, \TextBox,
-        tile-to-px(0.5 * it), srcY, kDigitSrcWidth, kDigitSrcHeight
+      new Sprite graphics, \TextBox, tpx(0.5 * it), tpx(srcY), tpx(0.5), tpx(0.5)
 
     # Add operators for damage/experience numbers
     if @op is PLUS
       @glyphs.push new Sprite graphics, \TextBox,
-        kOpPlusSrcX, kOpSrcY, kDigitSrcWidth, kDigitSrcHeight
+        tpx(kOpPlusSrcX), tpx(kOpSrcY), tpx(0.5), tpx(0.5)
 
     if @op is MINUS
       @glyphs.push new Sprite graphics, \TextBox,
-        kOpMinusSrcX, kOpSrcY, kDigitSrcWidth, kDigitSrcHeight
+        tpx(kOpMinusSrcX), tpx(kOpSrcY), tpx(0.5), tpx(0.5)
 
     @width  = kHalfTile * @glyphs.length
     @height = kHalfTile
 
-  # NumberSprite::draw (Graphics, Game, Game)
   draw: (graphics, x, y) ->
     for glyph, i in @glyphs
       offset = kDigitSize * (@glyphs.length - 1 - i)
@@ -123,7 +116,6 @@ export class NumberSprite
   draw-centered: (graphics, x, y) ->
     @draw graphics, x - @width/2, y - @height/2
 
-  # NumberSprite.seperate-digits (Number) -> Array
   @seperate-digits = (num) ->
     if num is 0
       [ 0 ]
@@ -135,15 +127,12 @@ export class NumberSprite
 
   # 'Named Constructors'
 
-  # NumberSprite.HUDNumber (Graphics, Number, Number)
   @HUDNumber = (graphics, @num, @len) ->
     new NumberSprite graphics, @num, @len, WHITE, NONE
 
-  # NumberSprite.DamageNumber (Graphics, Number)
   @DamageNumber = (graphics, @num) ->
     new NumberSprite graphics, @num, 0, RED, MINUS
 
-  # NumberSprite.ExperienceNumber (Graphics, Number)
   @ExperienceNumber = (graphics, @num) ->
     new NumberSprite graphics, @num, 0, WHITE, PLUS
 
@@ -154,19 +143,9 @@ export class NumberSprite
 
 export class VaryingWidthSprite extends Sprite
 
-  # VaryingWidthSprite : Sprite (Graphics)
-  (graphics, path, source-x, source-y, @initial-width, @height) ->
-
+  (graphics, path, x, y, @w, @h, @max-width = @w) ->
     super ...
-    @width = @initial-width
 
-  # VaryingWidthSprite::set-width (Pixels)
-  set-width: (width) ->
-    @width = width
-
-  # VaryingWidthSprite::draw (Graphics)
-  #draw: (graphics) ->
-
-
-
+  set-width: (width) -> @w = width
+  set-percentage-width: (fraction) -> @w = fraction * @max-width
 

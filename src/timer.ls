@@ -13,8 +13,8 @@ export class Timer
 
   all-timers = []
 
-  (@expiration-time) ->
-    @current-time = @expiration-time
+  (@expiration-time, start-active = no) ->
+    @current-time = if start-active then 0 else @expiration-time
     all-timers.push this
 
   update: (elapsed-time) ->
@@ -23,12 +23,8 @@ export class Timer
   reset: ->
     @current-time = 0
 
-  is-active:~ ->
-    @current-time < @expiration-time
-
-  is-expired:~ ->
-    not @is-active
-
+  is-active:~ -> @current-time < @expiration-time
+  is-expired:~ -> not @is-active
   active: -> @current-time < @expiration-time
   expired: -> not (@current-time < @expiration-time)
 

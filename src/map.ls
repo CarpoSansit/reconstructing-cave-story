@@ -6,11 +6,10 @@ require! \./units
 
 { div } = std
 
-{ tile-to-px, game-to-px, tile-to-game } = units
+{ tile-to-px: tpx, game-to-px, tile-to-game } = units
 
-{ Sprite }          = require \./sprite
-{ FixedBackdrop }   = require \./backdrop
-{ Rectangle: Rect } = require \./rectangle
+{ Sprite }        = require \./sprite
+{ FixedBackdrop } = require \./backdrop
 
 
 # Constants
@@ -59,10 +58,10 @@ module.exports = class Map
         sprite?.draw graphics, tile-to-game(x), tile-to-game(y)
 
   get-colliding-tiles: (rect) ->
-    first-row = game-to-px(rect.top)    `div` tile-to-px(1)
-    last-row  = game-to-px(rect.bottom) `div` tile-to-px(1)
-    first-col = game-to-px(rect.left)   `div` tile-to-px(1)
-    last-col  = game-to-px(rect.right)  `div` tile-to-px(1)
+    first-row = game-to-px(rect.top)    `div` tpx(1)
+    last-row  = game-to-px(rect.bottom) `div` tpx(1)
+    first-col = game-to-px(rect.left)   `div` tpx(1)
+    last-col  = game-to-px(rect.right)  `div` tpx(1)
     collision-tiles = []
 
     for row from first-row to last-row
@@ -91,9 +90,7 @@ module.exports = class Map
     row = 11
 
     # Basic block
-    tile = new Tile WALL_TILE, new Sprite graphics, fg-path,
-      tile-to-px(1), 0,
-      tile-to-px(1), tile-to-px(1)
+    tile = new Tile WALL_TILE, new Sprite graphics, fg-path, tpx(1), tpx(0), tpx(1), tpx(1)
 
     # Floor
     for col from 0 to num-cols
@@ -106,11 +103,12 @@ module.exports = class Map
     map.tiles[7][2]  = tile
     map.tiles[10][3] = tile
     map.tiles[10][0] = tile
+    map.tiles[8][10] = tile
 
     # Background tiles
-    chain-top = new Sprite graphics, fg-path, tile-to-px(11), tile-to-px(2), tile-to-px(1), tile-to-px(1)
-    chain-mid = new Sprite graphics, fg-path, tile-to-px(12), tile-to-px(2), tile-to-px(1), tile-to-px(1)
-    chain-btm = new Sprite graphics, fg-path, tile-to-px(13), tile-to-px(2), tile-to-px(1), tile-to-px(1)
+    chain-top = new Sprite graphics, fg-path, tpx(11), tpx(2), tpx(1), tpx(1)
+    chain-mid = new Sprite graphics, fg-path, tpx(12), tpx(2), tpx(1), tpx(1)
+    chain-btm = new Sprite graphics, fg-path, tpx(13), tpx(2), tpx(1), tpx(1)
     map.bg-tiles[8][2] = chain-top
     map.bg-tiles[9][2] = chain-mid
     map.bg-tiles[10][2] = chain-btm

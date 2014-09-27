@@ -29,6 +29,19 @@ export abs   = Math.abs
 export max   = Math.max
 export min   = Math.min
 export sin   = Math.sin
+export cos   = Math.cos
+
+export pi  = Math.PI
+export tau = Math.PI * 2
+
+export rand = (min, max) -> min + Math.random! * (max - min)
+
+
+# Custom Exceptions
+
+export class InterfaceError extends Error
+  (@message) ->
+    @name = \InterfaceError
 
 
 # Export

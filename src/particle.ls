@@ -1,14 +1,14 @@
 
 #
-# Damageable
+# Particle
 #
 
-require! \std
+class InterfaceError extends Error
+  (@message) ->
+    @name = \InterfaceError
 
-{ InterfaceError } = std
 
-
-# Damageable pseudo-interface
+# Particle pseudo-interface
 #
 # Although Livescript provides this mixin device with the `implements` keyword,
 # it's not like a real interface because it provides no kind of enforcement.
@@ -16,9 +16,11 @@ require! \std
 # codebase, of providing fallback properties which raise runtime errors about
 # the lack of implementation.
 
-export class Damageable
-  center-x: 0  # Implement as a getter
-  center-y: 0  # Implement as a getter
-  get-damage-text: ->
-    throw new InterfaceError "Damageable - `get-damage-text` method not implemented"
+export class Particle
+
+  update: (elapsed-time) ->
+    throw new InterfaceError "Particle - `update` not implemented"
+
+  draw: (graphics) ->
+    throw new InterfaceError "Particle - `draw` not implemented"
 
