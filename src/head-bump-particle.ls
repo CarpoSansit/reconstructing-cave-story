@@ -6,24 +6,23 @@
 require! \std
 require! \./units
 
-{ game-to-px } = units
+{ game-to-px: px } = units
 
 { Timer }       = require \./timer
 { Particle }    = require \./particle
 { Sprite }      = require \./sprite
 { PolarVector } = require \./polar
+{ Rectangle }   = require \./rectangle
 
 
 # Constants
 
-kSourceX      = 116
-kSourceY      = 54
-kSourceWidth  = 6
-kSourceHeight = 6
+# Because this one isn't specifed in terms of tiles, we'll use just a normal
+# Rectangle to capture it's source shape. This should be uncommon.
+kSpriteSrc = new Rectangle px(116), px(54), px(6), px(6)
 
 kFlashPeriod  = 25
 kLifeTime     = 700
-
 kSpeed        = 0.12  # game units per ms
 
 
@@ -40,9 +39,7 @@ export class HeadBumpParticle extends Particle
     @max-offset-a = std.floor std.rand 4, 20
     @max-offset-b = std.floor std.rand 4, 20
 
-    @sprite = new Sprite graphics, \Caret,
-      game-to-px(kSourceX), game-to-px(kSourceY),
-      game-to-px(kSourceWidth), game-to-px(kSourceHeight)
+    @sprite = new Sprite graphics, \Caret, kSpriteSrc
 
   update: (elapsed-time) ->
     @particle-a.mag = std.min @max-offset-a, @particle-a.mag + elapsed-time * kSpeed

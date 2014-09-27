@@ -33,9 +33,10 @@ export HP = std.floor
 export game-to-px   = Pixel . (/ kPixelScaleFactor)
 export game-to-tile = Tile . (/ kGameUnitsPerTile)
 export tile-to-game = (* kGameUnitsPerTile)
-export tile-to-px   = game-to-px . tile-to-game
-export deg-to-rad   = (* kPi / 180)
+export tile-to-px   = tile-to-game >> game-to-px
 export px-to-game   = (* kPixelScaleFactor)
+export px-to-tile   = px-to-game >> (/ kGameUnitsPerTile)
+export deg-to-rad   = (* kPi / 180)
 
 # Convenience Constants
 export kOneTile  = tile-to-game 1

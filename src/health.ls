@@ -8,7 +8,10 @@ require! \./units
 
 { div } = std
 { kHalfTile, tile-to-px, px-to-game, tile-to-game } = units
-{ Timer } = require \./timer
+
+{ Timer }        = require \./timer
+{ SpriteSource } = require \./rectangle
+
 { Sprite, NumberSprite, VaryingWidthSprite } = require \./sprite
 
 
@@ -21,10 +24,8 @@ kHealthFillY = tile-to-game 2
 kHealthNumX  = tile-to-game 1.5
 kHealthNumY  = tile-to-game 2
 
-kMaxFillPx   = tile-to-px(2.5) - 1
-
+kMaxFill     = 2.5 - units.px-to-tile 1
 kDamageDelay = 1500
-
 kSpritePath  = \TextBox
 
 # Health class
@@ -40,11 +41,11 @@ export class Health
 
     # Sprites
     @health-bar-sprite = new Sprite graphics, kSpritePath,
-      0, tile-to-px(2.5), tile-to-px(4), tile-to-px(0.5)
+      new SpriteSource 0, 2.5, 4, 0.5
     @health-fill-sprite = new VaryingWidthSprite graphics, kSpritePath,
-      0, tile-to-px(1.5), kMaxFillPx, tile-to-px(0.5)
+      new SpriteSource 0, 1.5, kMaxFill, 0.5
     @damage-fill-sprite = new VaryingWidthSprite graphics, kSpritePath,
-      0, tile-to-px(2.0), kMaxFillPx, tile-to-px(0.5)
+      new SpriteSource 0, 2, kMaxFill, 0.5
 
   # Health::take-damage (HP) -> Bool
   take-damage: (damage) ->

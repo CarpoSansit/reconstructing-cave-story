@@ -11,7 +11,7 @@ require! \./units
 { kHalfTile, tile-to-px, game-to-px } = units
 
 { Timer } = require \./timer
-{ Rectangle: Rect } = require \./rectangle
+{ Rectangle: Rect, SpriteSource } = require \./rectangle
 
 
 # Sprite class
@@ -68,12 +68,11 @@ export class AnimatedSprite extends Sprite
 
 export class NumberSprite
 
-  kDigitSrcY      = tile-to-px 3.5
-  kDigitSrcWidth  = tile-to-px 0.5
-  kDigitSrcHeight = tile-to-px 0.5
-  kOpPlusSrcX     = tile-to-px 2
-  kOpMinusSrcX    = tile-to-px 2.5
-  kOpSrcY         = tile-to-px 3
+  kDigitSrcY      = 3.5
+  kOpPlusSrcX     = 2
+  kOpMinusSrcX    = 2.5
+  kOpSrcY         = 3
+
   kDigitSize      = units.kHalfTile
   kRadix          = 10
 
@@ -88,30 +87,28 @@ export class NumberSprite
   # wants. We don't handle the case where len lies about the number.
 
   (graphics, @num, @len, @color, @op) ->
-    @digits = NumberSprite.seperate-digits @num
+    @digits     = NumberSprite.seperate-digits @num
     @num-digits = @digits.length
-    @padding = if @len is 0 then 0 else kDigitSize * (@len - @num-digits)
+    @padding    = if @len is 0 then 0 else kDigitSize * (@len - @num-digits)
 
     # Choose color
-    srcY = if @color is WHITE then kDigitSrcY else kDigitSrcY + game-to-px kHalfTile
+    srcY = if @color is WHITE then kDigitSrcY else kDigitSrcY + 0.5
 
     @glyphs = @digits.map ->
-      new Sprite graphics, \TextBox,
-        tile-to-px(0.5 * it), srcY, kDigitSrcWidth, kDigitSrcHeight
+      new Sprite graphics, \TextBox, new SpriteSource 0.5 * it, srcY, 0.5, 0.5
 
     # Add operators for damage/experience numbers
     if @op is PLUS
       @glyphs.push new Sprite graphics, \TextBox,
-        kOpPlusSrcX, kOpSrcY, kDigitSrcWidth, kDigitSrcHeight
+        new SpriteSource kOpPlusSrcX, kOpSrcY, 0.5, 0.5
 
     if @op is MINUS
       @glyphs.push new Sprite graphics, \TextBox,
-        kOpMinusSrcX, kOpSrcY, kDigitSrcWidth, kDigitSrcHeight
+        new SpriteSource kOpMinusSrcX, kOpSrcY, 0.5, 0.5
 
     @width  = kHalfTile * @glyphs.length
     @height = kHalfTile
 
-  # NumberSprite::draw (Graphics, Game, Game)
   draw: (graphics, x, y) ->
     for glyph, i in @glyphs
       offset = kDigitSize * (@glyphs.length - 1 - i)
@@ -120,7 +117,6 @@ export class NumberSprite
   draw-centered: (graphics, x, y) ->
     @draw graphics, x - @width/2, y - @height/2
 
-  # NumberSprite.seperate-digits (Number) -> Array
   @seperate-digits = (num) ->
     if num is 0
       [ 0 ]
@@ -132,15 +128,12 @@ export class NumberSprite
 
   # 'Named Constructors'
 
-  # NumberSprite.HUDNumber (Graphics, Number, Number)
   @HUDNumber = (graphics, @num, @len) ->
     new NumberSprite graphics, @num, @len, WHITE, NONE
 
-  # NumberSprite.DamageNumber (Graphics, Number)
   @DamageNumber = (graphics, @num) ->
     new NumberSprite graphics, @num, 0, RED, MINUS
 
-  # NumberSprite.ExperienceNumber (Graphics, Number)
   @ExperienceNumber = (graphics, @num) ->
     new NumberSprite graphics, @num, 0, WHITE, PLUS
 
@@ -151,19 +144,13 @@ export class NumberSprite
 
 export class VaryingWidthSprite extends Sprite
 
-  # VaryingWidthSprite : Sprite (Graphics)
   (graphics, path, source-x, source-y, @initial-width, @height) ->
-
     super ...
     @width = @initial-width
 
-  # VaryingWidthSprite::set-width (Pixels)
   set-width: (width) ->
     @width = width
 
-  # VaryingWidthSprite::draw (Graphics)
   #draw: (graphics) ->
-
-
 
 
