@@ -8,6 +8,7 @@
 
 require! \std
 require! \./units
+require! \./config
 
 { kHalfTile, tile-to-px:tpx, tile-to-game, game-to-px } = units
 
@@ -142,7 +143,8 @@ class PolarStarProjectile extends Projectile
 
   draw: (graphics) ->
     @sprite.draw graphics, @x, @y
-    graphics.visualiseRect @collision-rectangle!
+    if config.show-collisions
+      graphics.visualiseRect @collision-rectangle!
 
   collide-with-enemy: ->
     @alive = false
