@@ -31,18 +31,3 @@ export class Rectangle
       @top <= other.bottom and
       @bottom >= other.top
 
-
-# SpriteSource
-#
-# A special rectanlge used to clean up the definition of sprite regions.
-# Instead of having kSourceX, kSourceY, etc etc in every files, lets just have
-# new SpriteSource x, y, w, h.
-
-export class SpriteSource
-
-  (tile-x, tile-y, tile-w = 1, tile-h = 1) ->
-    @x = units.tile-to-px tile-x
-    @y = units.tile-to-px tile-y
-    @w = units.tile-to-px tile-w
-    @h = units.tile-to-px tile-h
-

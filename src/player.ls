@@ -8,7 +8,7 @@ require! \./units
 require! \./config
 require! \./readout
 
-{ kHalfTile, tile-to-game, tile-to-px } = units
+{ kHalfTile, tile-to-game, tile-to-px: tpx } = units
 
 { WALL_TILE }       = require \./map
 { Timer }           = require \./timer
@@ -19,10 +19,11 @@ require! \./readout
 { PolarStar }       = require \./arms
 
 { SpriteState, State } = require \./spritestate
-{ Rectangle: Rect, SpriteSource } = require \./rectangle
+{ Rectangle: Rect }    = require \./rectangle
+{ HeadBumpParticle }   = require \./head-bump-particle
+
 { Sprite, AnimatedSprite, NumberSprite } = require \./sprite
 
-{ HeadBumpParticle } = require \./head-bump-particle
 
 # Animation constants
 kCharacterFrame = 0
@@ -158,7 +159,7 @@ export class Player extends Damageable
           | state.STRIDE_MIDDLE => kStrideMiddleFrameOffset
           | otherwise => void
 
-      new Sprite graphics, \MyChar, new SpriteSource tile-x, tile-y, 1, 1
+      new Sprite graphics, \MyChar, tpx(tile-x), tpx(tile-y), tpx(1), tpx(1)
 
   update: (elapsed-time, map, ptools) ->
     @sprites[@get-sprite-state!key].update elapsed-time

@@ -9,7 +9,7 @@
 require! \std
 require! \./units
 
-{ kHalfTile, tile-to-px, tile-to-game, game-to-px } = units
+{ kHalfTile, tile-to-px:tpx, tile-to-game, game-to-px } = units
 
 { WALL_TILE }          = require \./map
 { Sprite }             = require \./sprite
@@ -18,7 +18,7 @@ require! \./units
 { StarParticle }       = require \./star-particle
 { WallParticle }       = require \./wall-particle
 
-{ Rectangle: Rect, SpriteSource } = require \./rectangle
+{ Rectangle: Rect } = require \./rectangle
 
 
 # Assets
@@ -36,9 +36,10 @@ kLeftOffset       = 0
 # Weapon tile offsets
 kPolarStarIndex = 2
 
-# Projectile sprite tiles
-kProjectileSrcHorizontal = new SpriteSource 8, 2, 1, 1
-kProjectileSrcVertical   = new SpriteSource 9, 2, 1, 1
+# Projectile sprite sources
+kProjectileSrcYs = [ 2, 2, 3 ]
+kProjectileSrcXs = [ 8, 9, 8 ]
+
 
 # Projectile nozzle offsets (game units)
 kNozzleHorizY      = 23
@@ -169,8 +170,10 @@ export class PolarStar
     @projectile-b = null
     @sprites = @initialise-sprites graphics
 
-    @hp-sprite = new Sprite graphics, \bullet, kProjectileSrcHorizontal
-    @vp-sprite = new Sprite graphics, \bullet, kProjectileSrcVertical
+    @hp-sprite = new Sprite graphics, \bullet,
+      tpx(kProjectileSrcXs.0), tpx(kProjectileSrcYs.0), tpx(1), tpx(1)
+    @vp-sprite = new Sprite graphics, \bullet,
+      tpx(kProjectileSrcXs.0 + 1), tpx(kProjectileSrcYs.0), tpx(1), tpx(1)
 
   initialise-sprites: (graphics) ->
     SpriteState.generate-with (state) ->
@@ -182,8 +185,8 @@ export class PolarStar
       | state.DOWN       => tile-y += kDownOffset
 
       new Sprite graphics, kArmsSpritePath,
-        new SpriteSource kPolarStarIndex * kSpriteWidth,
-          tile-y, kSpriteWidth, kSpriteHeight
+        tpx(kPolarStarIndex * kSpriteWidth),
+          tpx(tile-y), tpx(kSpriteWidth), tpx(kSpriteHeight)
 
   start-fire: (state, player-x, player-y) ->
 

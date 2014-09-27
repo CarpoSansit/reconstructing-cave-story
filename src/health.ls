@@ -7,7 +7,7 @@ require! \std
 require! \./units
 
 { div } = std
-{ kHalfTile, px-to-tile, tile-to-px, px-to-game, tile-to-game } = units
+{ kHalfTile, px-to-tile, tile-to-px:tpx, px-to-game, tile-to-game } = units
 
 { Timer }        = require \./timer
 { SpriteSource } = require \./rectangle
@@ -24,16 +24,19 @@ kHealthFillY = tile-to-game 2
 kHealthNumX  = tile-to-game 1.5
 kHealthNumY  = tile-to-game 2
 
-kMaxFillPx   = tile-to-px(2.5) - 1
-kMaxFill     = px-to-tile kMaxFillPx
+kMaxFillPx   = tpx(2.5) - 1
 kDamageDelay = 1500
 kSpritePath  = \TextBox
 
 # Sprite Sources
 
-kHealthBarSrc  = new SpriteSource 0, 2.5, 4, 0.5
-kHealthFillSrc = new SpriteSource 0, 1.5, kMaxFill, 0.5
-kDamageFillSrc = new SpriteSource 0, 2.0, kMaxFill, 0.5
+kBarSrcX    = 0
+kBarSrcY    = 2.5
+kFillSrcY   = 1.5
+kDamageSrcY = 2
+
+kBarSrcWidth  = 4
+kBarSrcHeight = 0.5
 
 
 # Health class
@@ -46,32 +49,31 @@ export class Health
     @damage-timer = new Timer kDamageDelay
 
     # Sprites
-    @health-bar-sprite  = new Sprite graphics, kSpritePath, kHealthBarSrc
-    @health-fill-sprite = new VaryingWidthSprite graphics,
-      kSpritePath, kHealthFillSrc, kHealthFillSrc.w
-    @damage-fill-sprite = new VaryingWidthSprite graphics,
-      kSpritePath, kDamageFillSrc, kDamageFillSrc.w
+    @health-bar-sprite  = new Sprite graphics, kSpritePath,
+      tpx(kBarSrcX), tpx(kBarSrcY), tpx(kBarSrcWidth), tpx(kBarSrcHeight)
+
+    @health-fill-sprite = new VaryingWidthSprite graphics, kSpritePath,
+      tpx(kBarSrcX), tpx(kFillSrcY), kMaxFillPx, tpx(kBarSrcHeight), kMaxFillPx
+
+    @damage-fill-sprite = new VaryingWidthSprite graphics, kSpritePath,
+      tpx(kBarSrcX), tpx(kDamageSrcY), kMaxFillPx, tpx(kBarSrcHeight), kMaxFillPx
+
 
   update: (elapsed-time) ->
     if @damage > 0 and @damage-timer.is-expired
       @current-health = std.max 0, @current-health - @damage
       @damage = 0
 
-  fill-offset: (health) ->
-    kMaxFillPx * (health / @max-health)
-
   draw: (graphics) ->
-    @health-bar-sprite.draw  graphics, kHealthBarX, kHealthBarY
+    @health-bar-sprite.draw graphics, kHealthBarX, kHealthBarY
 
     unless @current-health is 0
-
       if @damage
         @damage-fill-sprite.draw graphics, kHealthFillX, kHealthFillY
-
       @health-fill-sprite.draw graphics, kHealthFillX, kHealthFillY
 
     (new NumberSprite.HUDNumber graphics, @current-health, 2).draw graphics,
-      kHealthNumX,  kHealthNumY
+      kHealthNumX, kHealthNumY
 
   take-damage: (damage) ->
     return if @current-health is 0

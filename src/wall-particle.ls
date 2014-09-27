@@ -8,18 +8,13 @@
 require! \std
 require! \./units
 
-{ SpriteSource }   = require \./rectangle
+{ tile-to-px: tpx } = require \./units
 { ImmobileSingleLoopParticle } = require \./immobile-single-loop-particle
-
-
-# Constants
-
-kWallSrc = new SpriteSource 11, 0
 
 
 # Star Particle
 
 export class WallParticle extends ImmobileSingleLoopParticle
   (graphics, x, y) ->
-    super graphics, x, y, \Caret, kWallSrc, 18, 4
+    super graphics, x, y, \Caret, tpx(11), tpx(0), tpx(1), tpx(1), 18, 4
 

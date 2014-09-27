@@ -41,7 +41,7 @@ export px-to-tile   = px-to-game >> (/ kGameUnitsPerTile)
 export deg-to-rad   = (* kPi / 180)
 
 # Convenience Constants
-export kOneTile  = tile-to-game 1
-export kHalfTile = tile-to-game 0.5
-export kTilePx   = tile-to-px 1
-
+export kOneTile     = tile-to-game 1
+export kHalfTile    = tile-to-game 0.5
+export kTilePx      = tile-to-px 1
+export kMaxGunLevel = 3

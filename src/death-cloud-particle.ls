@@ -9,16 +9,13 @@
 require! \std
 require! \./units
 
-{ kHalfTile } = units
+{ kHalfTile, tile-to-px:tpx } = units
 
 { PolarVector }    = require \./polar
 { AnimatedSprite } = require \./sprite
-{ SpriteSource }   = require \./rectangle
 
 
 # Constants
-
-kSrc = new SpriteSource 1, 0, 1, 1
 
 kBaseVelocity = 0.12
 
@@ -29,7 +26,9 @@ export class DeathCloudParticle
 
   (graphics, @center-x, @center-y, @speed, angle) ->
     @offset = new PolarVector 0, angle
-    @sprite = new AnimatedSprite graphics, \Npc/NpcSym, kSrc, 18, [0 til 7]
+    @sprite = new AnimatedSprite graphics, \Npc/NpcSym,
+      tpx(1), tpx(0), tpx(1), tpx(1),
+      18, 7
 
   update: (elapsed-time) ->
     @sprite.update elapsed-time

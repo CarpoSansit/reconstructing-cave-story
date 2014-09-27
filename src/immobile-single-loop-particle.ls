@@ -15,9 +15,9 @@ require! \std
 
 export class ImmobileSingleLoopParticle
 
-  (graphics, @x, @y, sprite-path, sprite-source, fps, frames) ->
-    @sprite = new AnimatedSprite graphics,
-      sprite-path, sprite-source, fps, [0 til frames]
+  (graphics, @x, @y, sprite-path, src-x, src-y, src-w, src-h, fps, frames) ->
+    @sprite = new AnimatedSprite graphics, sprite-path,
+      src-x, src-y, src-w, src-h, fps, frames
 
   update: (elapsed-time) ->
     @sprite.update elapsed-time

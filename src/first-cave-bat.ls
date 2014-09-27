@@ -7,14 +7,14 @@ require! \std
 require! \./units
 require! \./config
 
-{ tile-to-px, tile-to-game, kHalfTile, kTilePx } = units
+{ tile-to-px: tpx, tile-to-game, kHalfTile } = units
 
 { Damageable }             = require \./damageable
 { DamageText }             = require \./damage-text
 { DamageTexts }            = require \./damage-texts
 { Sprite, AnimatedSprite } = require \./sprite
 
-{ Rectangle: Rect, SpriteSource } = require \./rectangle
+{ Rectangle: Rect } = require \./rectangle
 
 
 # Reference constants
@@ -54,7 +54,7 @@ export class FirstCaveBat extends Damageable
   initialise-sprite: (graphics, facing) ->
     facing-offset = if facing is RIGHT then 1 else 0
     new AnimatedSprite graphics, 'Npc/NpcCemet',
-      (new SpriteSource 2, 2 + facing-offset, 1, 1), kFlyFps, [ 0 til kNumFlyFrames ]
+      tpx(2), tpx(2 + facing-offset), tpx(1), tpx(1), kFlyFps, kNumFlyFrames
 
   initialise-sprites: (graphics, sprite-map = {}) ->
     for facing in [ LEFT, RIGHT ]
