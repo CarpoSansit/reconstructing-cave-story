@@ -167,12 +167,12 @@ export class PolarStar
 
     @hp-sprites =
       for lvl from 0 to units.kMaxGunLevel
-        new Sprite graphics, \bullet,
+        new Sprite graphics, \Bullet,
           tpx(kProjectileSrcXs[lvl]), tpx(kProjectileSrcYs[lvl]), tpx(1), tpx(1)
 
     @vp-sprites =
       for lvl from 0 to units.kMaxGunLevel
-        new Sprite graphics, \bullet,
+        new Sprite graphics, \Bullet,
           tpx(kProjectileSrcXs[lvl]+1), tpx(kProjectileSrcYs[lvl]), tpx(1), tpx(1)
 
   initialise-sprites: (graphics) ->
