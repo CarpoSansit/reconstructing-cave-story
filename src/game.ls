@@ -27,6 +27,7 @@ Map    = require \./map
 
 { ParticleTools, ParticleSystem }  = require \./particle-system
 { StarParticle } = require \./star-particle
+{ DeathCloudParticle } = require \./death-cloud-particle
 
 
 # Reference constants
@@ -136,7 +137,11 @@ event-loop = ->
 update = (elapsed-time) ->
   Timer.update-all elapsed-time
   player.update elapsed-time, map, ptools
-  if not bat?.update elapsed-time, player.x
+
+  # Bat died
+  if bat and not bat?.update elapsed-time, player.x
+    particle-system.add-new-particle new DeathCloudParticle graphics,
+      bat.center-x, bat.center-y, 0.12, 1
     bat := null
 
   # Bullet-to-enemy collisions
