@@ -9,9 +9,19 @@ require! \./readout
 
 
 # Particle Tools
+#
+# Although Chris constructs his particle systems seperately and then passes
+# them into the Tools, I thought it was probably easier just construct them
+# here. The ParticleSystem constructor doesn't have any parameters anyway.
 
 export class ParticleTools
-  (@graphics, @system) ->
+  (@graphics) ->
+    @entity-system = new ParticleSystem
+    @front-system  = new ParticleSystem
+
+  update: (elapsed-time) ->
+    @entity-system.update elapsed-time
+    @front-system.update elapsed-time
 
 
 # Particle System

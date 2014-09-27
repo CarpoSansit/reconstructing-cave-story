@@ -132,7 +132,7 @@ class PolarStarProjectile extends Projectile
         | LEFT =>  particle-x = tile-rect.right - kHalfTile
         | RIGHT => particle-x = tile-rect.left - kHalfTile
 
-        ptools.system.add-new-particle new WallParticle ptools.graphics,
+        ptools.front-system.add-new-particle new WallParticle ptools.graphics,
           particle-x, particle-y
 
         # Die (as a function AND as a particle) before end of for loop
@@ -142,7 +142,7 @@ class PolarStarProjectile extends Projectile
     if not @alive
       false
     else if @offset >= @lifespan
-      ptools.system.add-new-particle new StarParticle ptools.graphics, @x, @y
+      ptools.front-system.add-new-particle new StarParticle ptools.graphics, @x, @y
       false
     else
       true

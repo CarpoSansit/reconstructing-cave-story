@@ -140,8 +140,8 @@ update = (elapsed-time) ->
 
   # Bat died
   if bat and not bat?.update elapsed-time, player.x
-    particle-system.add-new-particle new DeathCloudParticle graphics,
-      bat.center-x, bat.center-y, 0.12, 1
+    DeathCloudParticle.create-random-death-clouds ptools,
+      bat.center-x, bat.center-y, 3
     bat := null
 
   # Bullet-to-enemy collisions
@@ -158,7 +158,7 @@ update = (elapsed-time) ->
   # will suddenly exist which have not been updated, and will be drawn one
   # frame in their last known position
   DamageTexts.update elapsed-time
-  particle-system.update elapsed-time
+  ptools.update elapsed-time
 
 # Game::draw
 draw = ->
@@ -166,9 +166,10 @@ draw = ->
   map.draw-background graphics
   bat?.draw graphics
   player.draw graphics
+  ptools.entity-system.draw graphics
   map.draw graphics
-  particle-system.draw graphics
   player.draw-hud graphics
+  ptools.front-system.draw graphics
   DamageTexts.draw graphics
 
 # Game::create-test-world
@@ -176,8 +177,7 @@ create-test-world = ->
   map    := Map.create-test-map graphics
   player := new Player graphics, units.tile-to-game(kScreenWidth/2), units.tile-to-game(10)
   bat    := new FirstCaveBat graphics, units.tile-to-game(7), units.tile-to-game(8)
-  particle-system := new ParticleSystem graphics
-  ptools := new ParticleTools graphics, particle-system
+  ptools := new ParticleTools graphics
 
 # Game::start
 export start = ->

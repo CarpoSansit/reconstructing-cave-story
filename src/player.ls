@@ -237,7 +237,7 @@ export class Player extends Damageable
         if tile
           @y = units.tile-to-game(tile.row) + kCollisionYHeight
           @velocity-y = 0
-          ptools.system.add-new-particle new HeadBumpParticle ptools.graphics,
+          ptools.front-system.add-new-particle new HeadBumpParticle ptools.graphics,
             @center-x, @y + kCollisionYTop
         else
           @y += Δy
