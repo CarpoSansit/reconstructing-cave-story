@@ -28,7 +28,6 @@ Map    = require \./map
 { ParticleTools, ParticleSystem }  = require \./particle-system
 { StarParticle } = require \./star-particle
 { DeathCloudParticle } = require \./death-cloud-particle
-{ GunExperienceHUD } = require \./gun-xp-hud
 
 
 # Reference constants
@@ -43,7 +42,6 @@ player  = null
 bat     = null
 map     = null
 ptools  = null
-xp-hud  = null
 
 time-factor      = 1
 last-frame-time  = 0
@@ -173,7 +171,6 @@ draw = ->
   player.draw-hud graphics
   ptools.front-system.draw graphics
   DamageTexts.draw graphics
-  xp-hud.draw graphics, 1, 0, 10
 
 # Game::create-test-world
 create-test-world = ->
@@ -181,7 +178,6 @@ create-test-world = ->
   player := new Player graphics, units.tile-to-game(kScreenWidth/2), units.tile-to-game(10)
   bat    := new FirstCaveBat graphics, units.tile-to-game(7), units.tile-to-game(8)
   ptools := new ParticleTools graphics
-  xp-hud := new GunExperienceHUD graphics
 
 # Game::start
 export start = ->

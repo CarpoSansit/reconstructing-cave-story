@@ -52,12 +52,10 @@ export class GunExperienceHUD
     @flash-timer.reset!
 
   draw: (graphics, gun-lvl, current-xp, level-xp) ->
-
     @lv-sprite.draw     graphics, kLvDrawX,  kDrawY
     @xp-bar-sprite.draw graphics, kBarDrawX, kDrawY
 
-    lvl-num-sprite = NumberSprite.HUDNumber graphics, gun-lvl, 1
-    lvl-num-sprite.draw graphics, kLvlNumDrawX, kDrawY
+    NumberSprite.HUDNumber graphics, gun-lvl, 1 .draw graphics, kLvlNumDrawX, kDrawY
 
     if current-xp < level-xp
       @fill-sprite.set-percentage-width current-xp / level-xp
