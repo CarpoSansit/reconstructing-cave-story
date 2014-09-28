@@ -24,6 +24,9 @@ require! \./readout
 { Rectangle: Rect }    = require \./rectangle
 { HeadBumpParticle }   = require \./head-bump-particle
 
+{ ConstantAccelerator, FrictionAccelerator, BidirectionalAccelerator,
+kZero, kGravity, kTerminalSpeed } = require \./accelerators
+
 { Side } = require \./map-collidable
 { Sprite, AnimatedSprite, NumberSprite } = require \./sprite
 
@@ -44,16 +47,15 @@ kStrideMiddleFrameOffset = 0
 kStrideLeftFrameOffset   = 1
 kStrideRightFrameOffset  = 2
 
-# Physics constants
-kFriction            = 0.00049804687
-kGravity             = 0.00078125
-kWalkingAcceleration = 0.00083007812
-kAirAcceleration     = 0.0003125
-kMaxSpeedX           = 0.15859375
-kMaxSpeedY           = 0.2998046875
-kJumpSpeed           = 0.25
-kShortJumpSpeed      = 0.25 / 1.5
-kJumpGravity         = 0.0003125
+# Physics
+kJumpSpeed      = 0.25
+kShortJumpSpeed = kJumpSpeed / 1.5
+kMaxSpeedX      = 0.15859375
+kWalkAcc        = new BidirectionalAccelerator 0.00083007812, kMaxSpeedX
+kAirAcc         = new BidirectionalAccelerator 0.0003125, kMaxSpeedX
+kGravityAcc     = new ConstantAccelerator kGravity, kTerminalSpeed
+kFrictionAcc    = new FrictionAccelerator 0.00049804687
+kJumpGravityAcc = new ConstantAccelerator 0.0003125, kTerminalSpeed
 
 # Time constants
 kInvincibleTime      = 3000
@@ -118,6 +120,8 @@ export class Player implements Damageable::, MapCollidable::
 
   (graphics, x, y, @ptools) ->
 
+    readout.add-reader \player-pos, \Player
+
     # Player state (excluding x and y)
     @acceleration-x    = 0
     @horizontal-facing = State.LEFT
@@ -174,34 +178,41 @@ export class Player implements Damageable::, MapCollidable::
       new Sprite graphics, \MyChar, tpx(tile-x), tpx(tile-y), tpx(1), tpx(1)
 
   update: (elapsed-time, map) ->
-    @sprites[@get-sprite-state!key].update elapsed-time
-    @health.update elapsed-time
+    @health.update!
+    @walk-animation.update elapsed-time
     @gun.update-projectiles elapsed-time, map, @ptools
 
-    # X - note, Chris' code is slightly different here and I didn't notice.
-    # His acc-x is negative when @on-ground and @acceleration-x is negative.
-    # Everything seems to work, so not sure what thats about. Check if suspect.
-    acc-x = if @on-ground then kWalkingAcceleration else kAirAcceleration
-    @kinematics-x.velocity += @acceleration-x * acc-x * elapsed-time
+    readout.update \player-pos, "#{std.round @center-x},#{std.round @center-y}"
 
-    if @acceleration-x < 0
-      @kinematics-x.velocity = std.max(@kinematics-x.velocity, -kMaxSpeedX);
-    else if @acceleration-x > 0
-      @kinematics-x.velocity = std.min(@kinematics-x.velocity, kMaxSpeedX);
-    else if @on-ground
-      @kinematics-x.velocity =
-        if @kinematics-x.velocity > 0
-          std.max 0, @kinematics-x.velocity - kFriction * elapsed-time
+    # updateX
+    acc-x =
+      if @on-ground
+        if @acceleration-x is 0
+          kFrictionAcc
+        else if @acceleration-x < 0
+          kWalkAcc.negative
         else
-          std.min 0, @kinematics-x.velocity + kFriction * elapsed-time
-    @update-x kCollisionRectangle, @kinematics-x, @kinematics-y, elapsed-time, map
+          kWalkAcc.positive
+      else
+        if @acceleration-x is 0
+          kZero
+        else if @acceleration-x < 0
+          kAirAcc.negative
+        else
+          kAirAcc.positive
 
-    # Y
-    gravity = if @jump-active and @kinematics-y.velocity < 0 then kJumpGravity else kGravity
-    @kinematics-y.velocity = std.min @kinematics-y.velocity + gravity * elapsed-time, kMaxSpeedY
-    @update-y kCollisionRectangle, @kinematics-x, @kinematics-y, elapsed-time, map
+    @update-x kCollisionRectangle, acc-x,
+      @kinematics-x, @kinematics-y, elapsed-time, map
 
-    @walk-animation.update elapsed-time
+    # updateY
+    acc-y =
+      if @jump-active and @kinematics-y.velocity < 0 then
+        kJumpGravityAcc
+      else
+        kGravityAcc
+
+    @update-y kCollisionRectangle, acc-y,
+      @kinematics-x, @kinematics-y, elapsed-time, map
 
   take-damage: (damage = 1) ->
     unless @invincible-timer.is-active

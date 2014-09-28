@@ -15,11 +15,14 @@ require! \./readout
 # here. The ParticleSystem constructor doesn't have any parameters anyway.
 
 export class ParticleTools
+
   (@graphics) ->
+    readout.add-reader \particles, \Particles, 0
     @entity-system = new ParticleSystem
     @front-system  = new ParticleSystem
 
   update: (elapsed-time) ->
+    readout.update \particles, @entity-system.particles.length + @front-system.particles.length
     @entity-system.update elapsed-time
     @front-system.update elapsed-time
 
@@ -28,14 +31,12 @@ export class ParticleTools
 
 export class ParticleSystem
   ->
-    readout.add-reader \particles, \Particles, 0
     @particles = []
 
   add-new-particle: ->
     @particles.push it
 
   update: (elapsed-time) ->
-    readout.update \particles, @particles.length
     @particles = std.filter (.update elapsed-time), @particles
 
   draw: (graphics) ->

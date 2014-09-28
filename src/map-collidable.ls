@@ -38,8 +38,9 @@ export class MapCollidable
         return λ.call this, tile
     λ.call this
 
-  update-x: (rect, kx, ky, elapsed-time, map) ->
+  update-x: (rect, acc, kx, ky, elapsed-time, map) ->
 
+    acc.update-velocity kx, elapsed-time
     Δx = kx.velocity * elapsed-time
 
     if Δx > 0
@@ -70,9 +71,9 @@ export class MapCollidable
           kx.position = units.tile-to-game(tile.col) - rect.bounding-box.right
           @on-collision Side.RIGHT, no
 
-  update-y: (rect, kx, ky, elapsed-time, map) ->
+  update-y: (rect, acc, kx, ky, elapsed-time, map) ->
 
-
+    acc.update-velocity ky, elapsed-time
     Δy = ky.velocity * elapsed-time
 
     # Falling
@@ -96,12 +97,13 @@ export class MapCollidable
         if tile
           ky.position = units.tile-to-game(tile.row + 1) + rect.bounding-box.top
           @on-collision Side.TOP, yes
+          ky.position = units.tile-to-game(tile.row + 1) + rect.bounding-box.top
         else
           ky.position += Δy
           @on-delta Side.TOP
 
       @on-wall-collision map, (bottom-box rect, kx, ky, 0), (tile) ->
         if tile
-          ky.position = units.tile-to-game(tile.row) - rect.bottom-collision.bottom
+          ky.position = units.tile-to-game(tile.row) - rect.bounding-box.bottom
           @on-collision Side.BOTTOM, no
 
