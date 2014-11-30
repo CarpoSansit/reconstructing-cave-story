@@ -35,5 +35,5 @@ export DamageTexts =
 
   draw: (graphics) ->
     for text in all-texts
-      text.draw graphics #.map (.draw graphics)
+      text.draw graphics
 

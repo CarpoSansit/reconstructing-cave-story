@@ -41,11 +41,11 @@ export class AnimatedSprite extends Sprite
 
     super ...
 
-    @frame-timer      = new Timer 1000 / @fps
-    @keyframes        = [ 0 til @num-frames ]
-    @current-frame    = 0
-    @current-keyframe = @keyframes[0]
-    @origin-x         = src-x
+    @frame-timer         = new Timer 1000 / @fps
+    @keyframes           = [ 0 til @num-frames ]
+    @current-frame       = 0
+    @current-keyframe    = @keyframes[0]
+    @origin-x            = src-x
     @num-completed-loops = 0
 
   draw: (graphics, x, y, frame-offset = @current-keyframe) ->
@@ -65,7 +65,7 @@ export class AnimatedSprite extends Sprite
 
 # NumberSprite
 #
-# For drawing numbers like on the healt HUD
+# For drawing numbers like on the health HUD
 
 export class NumberSprite
   kDigitSrcY   = 3.5

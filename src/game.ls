@@ -20,6 +20,7 @@ Map = require \./map
 
 { Timer }              = require \./timer
 { Player }             = require \./player
+{ Pickups }            = require \./pickups
 { Rectangle }          = require \./rectangle
 { FirstCaveBat }       = require \./first-cave-bat
 { FixedBackdrop }      = require \./backdrop
@@ -41,6 +42,7 @@ player  = null
 bat     = null
 map     = null
 ptools  = null
+pickups = null
 
 time-factor      = 1
 last-frame-time  = 0
@@ -157,6 +159,7 @@ update = (elapsed-time) ->
   # will suddenly exist which have not been updated, and will be drawn one
   # frame in their last known position
   DamageTexts.update elapsed-time
+  pickups.update elapsed-time, map
   ptools.update elapsed-time
 
 # Game::draw
@@ -164,19 +167,27 @@ draw = ->
   graphics.clear!
   map.draw-background graphics
   bat?.draw graphics
-  player.draw graphics
   ptools.entity-system.draw graphics
+  pickups.draw graphics
+  player.draw graphics
   map.draw graphics
-  player.draw-hud graphics
   ptools.front-system.draw graphics
   DamageTexts.draw graphics
+  player.draw-hud graphics
 
 # Game::create-test-world
 create-test-world = ->
-  map    := Map.create-test-map graphics
-  ptools := new ParticleTools graphics
-  player := new Player graphics, units.tile-to-game(kScreenWidth/2), units.tile-to-game(10), ptools
-  bat    := new FirstCaveBat graphics, units.tile-to-game(7), units.tile-to-game(8)
+  map     := Map.create-test-map graphics
+  ptools  := new ParticleTools graphics
+  player  := new Player graphics, units.tile-to-game(kScreenWidth/2), units.tile-to-game(10), ptools
+  bat     := new FirstCaveBat graphics, units.tile-to-game(7), units.tile-to-game(8)
+  pickups := new Pickups
+
+  { PowerDorito, Pickup } = require \./pickup
+
+  # MOCK
+  pickups.add new PowerDorito graphics, 300, 200, Pickup.SMALL
+
 
 # Game::start
 export start = ->
