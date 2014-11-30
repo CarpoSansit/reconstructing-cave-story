@@ -12,6 +12,7 @@ require! \./readout
 
 { Timer }              = require \./timer
 { Health }             = require \./health
+{ Pickup }             = require \./pickup
 { Kinematics }         = require \./kinematics
 { Damageable }         = require \./damageable
 { DamageText }         = require \./damage-text
@@ -19,11 +20,11 @@ require! \./readout
 { PolarStar }          = require \./arms
 { GunExperienceHUD }   = require \./gun-xp-hud
 { MapCollidable }      = require \./map-collidable
-{ CollisionRectangle } = require \./collision-rectangle
 { SpriteState, State } = require \./spritestate
 { Rectangle: Rect }    = require \./rectangle
 { HeadBumpParticle }   = require \./head-bump-particle
 
+{ CompositeCollisionRectangle } = require \./collision-rectangle
 { ConstantAccelerator, FrictionAccelerator, BidirectionalAccelerator,
 kZero, kGravity, kTerminalSpeed } = require \./accelerators
 
@@ -71,7 +72,7 @@ kCollisionYBottomWidth = 10
 kCollisionYTopLeft     = (tile-to-game(1) - kCollisionYTopWidth) / 2
 kCollisionYBottomLeft  = (tile-to-game(1) - kCollisionYBottomWidth) / 2
 
-kCollisionRectangle = new CollisionRectangle(
+kCollisionRectangle = new CompositeCollisionRectangle(
   new Rect kCollisionYTopLeft, kCollisionYTop, kCollisionYTopWidth, kCollisionYHeight / 2
   new Rect kCollisionYBottomLeft, kCollisionYTop + kCollisionYHeight/2, kCollisionYBottomWidth, kCollisionYHeight / 2
   new Rect 6, 10, 10, 12
@@ -221,6 +222,9 @@ export class Player implements Damageable::, MapCollidable::
       @invincible = yes
       @invincible-timer.reset!
       @damage-text.set-damage damage
+
+  collect-pickup: (pickup) ->
+    
 
   sprite-is-visible: ->
     duty = @invincible-timer.current-time `std.div` kInvincibleFlashTime % 2 is 0

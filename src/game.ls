@@ -14,19 +14,18 @@ require! \./config
 require! \./readout
 require! \./graphics
 
-Map    = require \./map
+Map = require \./map
 
 { tile-to-game } = units
 
-{ Timer }          = require \./timer
-{ Player }         = require \./player
-{ Rectangle }      = require \./rectangle
-{ FirstCaveBat }   = require \./first-cave-bat
-{ FixedBackdrop }  = require \./backdrop
-{ DamageTexts }    = require \./damage-texts
-
-{ ParticleTools, ParticleSystem }  = require \./particle-system
-{ StarParticle } = require \./star-particle
+{ Timer }              = require \./timer
+{ Player }             = require \./player
+{ Rectangle }          = require \./rectangle
+{ FirstCaveBat }       = require \./first-cave-bat
+{ FixedBackdrop }      = require \./backdrop
+{ DamageTexts }        = require \./damage-texts
+{ ParticleTools }      = require \./particle-system
+{ StarParticle }       = require \./star-particle
 { DeathCloudParticle } = require \./death-cloud-particle
 
 

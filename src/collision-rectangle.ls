@@ -11,9 +11,45 @@ require! \./units
 { Rectangle: Rect }    = require \./rectangle
 
 
-# Collision Rectangle
+# Collision Rectangle Abstract
 
-export class CollisionRectangle
+class CollisionRectangle
+
+  bounding-box:~ ->
+  top-collision: (x, y, Δ) -> # Δ <= 0
+  left-collision: (x, y, Δ) -> # Δ <= 0
+  right-collision: (x, y, Δ) -> # Δ >= 0
+  bottom-collision: (x, y, Δ) -> # Δ >= 0
+
+
+# Simple Version
+
+export class SimpleCollisionRectangle extends CollisionRectangle
+
+  kExtraOffset = 0.001   # Game units
+
+  (@rect) ->
+
+  left-collision: (x, y, Δ) -> # Δ <= 0
+    new Rect x + @rect.left + Δ, y + @rect.top, @rect.w - Δ, @rect.h
+
+  right-collision: (x, y, Δ) -> # Δ >= 0
+    new Rect x + @rect.left, y + @rect.top, @rect.w + Δ, @rect.h
+
+  top-collision: (x, y, Δ) -> # Δ <= 0
+    new Rect x + @rect.left, y + @rect.top + Δ, @rect.w, @rect.h - Δ
+
+  bottom-collision: (x, y, Δ) -> # Δ >= 0
+    new Rect x + @rect.left, y + @rect.top, @rect.w, @rect.h + Δ
+
+  bounding-box:~ ->
+    new Rect @rect.left - kExtraOffset, @rect.top - kExtraOffset,
+      @rect.w + 2 * kExtraOffset, @rect.h + 2 * kExtraOffset
+
+
+# Composite Version - seperate X and Y boxes
+
+export class CompositeCollisionRectangle extends CollisionRectangle
 
   (@top, @bottom, @left, @right) ->
 
@@ -31,4 +67,5 @@ export class CollisionRectangle
 
   bounding-box:~ ->
     new Rect @left.left, @top.top, @left.w + @right.w, @top.h + @bottom.h
+
 
