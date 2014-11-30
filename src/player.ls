@@ -148,7 +148,6 @@ export class Player implements Damageable::, MapCollidable::
     # Sprites
     @sprites = @initialise-sprites graphics
     @damage-text = new DamageText graphics
-
     DamageTexts.add-damageable this
 
     # Items
@@ -224,7 +223,7 @@ export class Player implements Damageable::, MapCollidable::
       @damage-text.set-damage damage
 
   collect-pickup: (pickup) ->
-    
+    std.log 'SFX: Ding!'
 
   sprite-is-visible: ->
     duty = @invincible-timer.current-time `std.div` kInvincibleFlashTime % 2 is 0

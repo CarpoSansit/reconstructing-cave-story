@@ -70,5 +70,5 @@ export class FrictionAccelerator
 # Export static instances
 
 export kZero       = new ZeroAccelerator
-export kGravityAcc = new ConstantAccelerator kGravityAcc, kTerminalSpeed
+export kGravityAcc = new ConstantAccelerator kGravity, kTerminalSpeed
 

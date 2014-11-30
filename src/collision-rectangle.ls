@@ -11,7 +11,7 @@ require! \./units
 { Rectangle: Rect }    = require \./rectangle
 
 
-# Collision Rectangle Abstract
+# Collision Rectangle Abstract Class
 
 class CollisionRectangle
 
@@ -30,6 +30,8 @@ export class SimpleCollisionRectangle extends CollisionRectangle
 
   (@rect) ->
 
+  collides-with: (rect) -> @rect.collides-with rect
+
   left-collision: (x, y, Δ) -> # Δ <= 0
     new Rect x + @rect.left + Δ, y + @rect.top, @rect.w - Δ, @rect.h
 
@@ -47,7 +49,7 @@ export class SimpleCollisionRectangle extends CollisionRectangle
       @rect.w + 2 * kExtraOffset, @rect.h + 2 * kExtraOffset
 
 
-# Composite Version - seperate X and Y boxes
+# Composite Version - seperate directional boxes
 
 export class CompositeCollisionRectangle extends CollisionRectangle
 

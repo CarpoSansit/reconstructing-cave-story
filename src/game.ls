@@ -151,6 +151,9 @@ update = (elapsed-time) ->
       projectile.collide-with-enemy!
       bat.take-damage projectile.contact-damage
 
+  # Player-to-pickup collisions
+  pickups.handle-collisions player
+
   # Enemy-to-player collisions
   if bat?.damage-collision!.collides-with player.damage-collision!
     player.take-damage bat.contact-damage

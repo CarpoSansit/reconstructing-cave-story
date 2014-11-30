@@ -5,10 +5,14 @@ require! \std
 
 { kHalfTile, tile-to-px: tpx }:units = require \./units
 
-{ Timer }          = require \./timer
-{ Rectangle }      = require \./rectangle
-{ Kinematics }     = require \./kinematics
-{ AnimatedSprite } = require \./sprite
+{ Timer }                    = require \./timer
+{ Rectangle }                = require \./rectangle
+{ Kinematics }               = require \./kinematics
+{ AnimatedSprite }           = require \./sprite
+{ MapCollidable, Side }      = require \./map-collidable
+{ SimpleCollisionRectangle } = require \./collision-rectangle
+
+{ FrictionAccelerator, kGravityAcc } = require \./accelerators
 
 
 # Reference constants
@@ -35,7 +39,7 @@ export class Pickup
 
 # Specific Pickup types
 
-export class PowerDorito extends Pickup
+export class PowerDorito extends Pickup implements MapCollidable::
 
   kValues       = [ 1, 5, 20 ]
   kSpriteName   = \Npc/NpcSym
@@ -48,6 +52,14 @@ export class PowerDorito extends Pickup
   kLifetime     = 8000ms
   kFlashtime    = 7000ms
   kFlashPeriod  = 50
+  kBounceSpeed  = 0.225
+
+  kFriction = new FrictionAccelerator 0.00002
+  kCollisionRectangles = [
+    new SimpleCollisionRectangle new Rectangle 8, 8, 16, 16
+    new SimpleCollisionRectangle new Rectangle 4, 4, 24, 24
+    new SimpleCollisionRectangle new Rectangle 0, 0, 32, 32
+  ]
 
   (graphics, @center-x, @center-y, @size = SMALL) ->
     super EXPERIENCE, kValues[@size]
@@ -63,13 +75,34 @@ export class PowerDorito extends Pickup
   draw: (graphics) ->
     if @timer.current-time < kFlashtime or (@timer.current-time `std.div` kFlashPeriod) % 2 is 0
       @sprite.draw graphics, @kinematics-x.position, @kinematics-y.position
+    graphics.visualiseRect @collision-rectangle!
 
-  update: (elapsed-time) ->
+  update: (elapsed-time, map) ->
     @sprite.update!
+
+    @update-y kCollisionRectangles[@size], kGravityAcc,
+      @kinematics-x, @kinematics-y, elapsed-time, map
+
+    @update-x kCollisionRectangles[@size], kFriction,
+      @kinematics-x, @kinematics-y, elapsed-time, map
+
     return @timer.is-active
 
-  colliison-rectangle: ->
-    return new Rectangle 0, 0, 0, 0
+  collision-rectangle: ->
+    box = kCollisionRectangles[@size].bounding-box
+    new Rectangle @kinematics-x.position + box.left,
+      @kinematics-y.position + box.top, box.w, box.h
+
+  # Implements MapCollidable
+  on-collision: (side, is-delta-direction) ->
+    if side is Side.TOP
+      @kinematics-y.velocity = 0
+    else if side is Side.BOTTOM
+      @kinematics-y.velocity = -kBounceSpeed
+    else
+      @kinematics-x.velocity *= -1
+
+  on-delta: (side) ->
 
 
 # Export public constants

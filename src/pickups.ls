@@ -23,7 +23,7 @@ export class Pickups
 
   handle-collisions: (player) ->
     @pickups = @pickups.filter ->
-      if player.damage-rectangle.collised-with it.collision-rectangle
+      if player.damage-collision!collides-with it.collision-rectangle!
         player.collect-pickup it
         return false
       return true
