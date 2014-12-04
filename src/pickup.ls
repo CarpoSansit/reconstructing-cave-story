@@ -8,7 +8,7 @@ require! \std
 { Timer }                    = require \./timer
 { Rectangle }                = require \./rectangle
 { Kinematics }               = require \./kinematics
-{ AnimatedSprite }           = require \./sprite
+{ AnimatedSprite, Sprite }   = require \./sprite
 { MapCollidable, Side }      = require \./map-collidable
 { SimpleCollisionRectangle } = require \./collision-rectangle
 
@@ -25,9 +25,13 @@ require! \std
 
 export class Pickup
 
-  @SMALL  = SMALL
-  @MEDIUM = MEDIUM
-  @LARGE  = LARGE
+  # Export namespaced constants
+  @SMALL      = SMALL
+  @MEDIUM     = MEDIUM
+  @LARGE      = LARGE
+  @HEALTH     = HEALTH
+  @MISSILES   = MISSILES
+  @EXPERIENCE = EXPERIENCE
 
   (@type, @value) ->
     @collison-rectangle = new Rectangle
@@ -37,7 +41,7 @@ export class Pickup
   update: (elapsed-time) ->
 
 
-# Specific Pickup types
+# Experience Doodad - "Power Dorito"
 
 export class PowerDorito extends Pickup implements MapCollidable::
 
@@ -105,7 +109,83 @@ export class PowerDorito extends Pickup implements MapCollidable::
   on-delta: (side) ->
 
 
-# Export public constants in Pickup namespace
+# Flashing pickup - Missiles and Hearts work the same way
 
-Pickup <<< { HEALTH, MISSILES, EXPERIENCE }
+class FlashingPickup extends Pickup
+
+  kLifetime      = 8000ms
+  kStartPeriod   = 400ms
+  kEndPeriod     = 75 * 3
+  kFlickerPeriod = 75
+  kDissipateTime = kLifetime - 25ms
+  kFlickerTime   = kLifetime - 1000ms
+  kFlashInterp   = (kEndPeriod - kStartPeriod) / kFlickerTime
+
+  kSpriteName = \Npc/NpcSym
+
+  kDissipatingSourceX = 1
+  kDissipatingSourceY = 0
+
+  (graphics, @center-x, @center-y, source-x, source-y, @rectangle, @value, @type) ->
+    super @type, @value
+
+    @x = @center-x - kHalfTile
+    @y = @center-y - kHalfTile
+
+    @timer = new Timer kLifetime, true
+
+    @sprite = new Sprite graphics, kSpriteName,
+      (tpx source-x), (tpx source-y), (tpx 1), (tpx 1)
+
+    @flash-sprite = new Sprite graphics, kSpriteName,
+      (tpx source-x + 1), (tpx source-y), (tpx 1), (tpx 1)
+
+    @dissipating-sprite = new Sprite graphics, kSpriteName,
+      (tpx kDissipatingSourceX), (tpx kDissipatingSourceY), (tpx 1), (tpx 1)
+
+  collision-rectangle: ->
+    new Rectangle @x + @rectangle.left, @y + @rectangle.top,
+      @rectangle.w, @rectangle.h
+
+  draw: (graphics) ->
+
+    if @timer.current-time > kDissipateTime
+      @dissipating-sprite.draw graphics, @x, @y
+
+    else if @timer.current-time > kFlickerTime
+      if (@timer.current-time `std.div` @flash-period % 3) is 0
+        @sprite.draw graphics, @x, @y
+      else if (@timer.current-time `std.div` @flash-period % 3) is 1
+        @flash-sprite.draw graphics, @x, @y
+      else
+        void # One out of three times doesn't draw
+
+    else  # During flicker time
+      if (@timer.current-time `std.div` @flash-period % 2) is 0
+        @sprite.draw graphics, @x, @y
+      else
+        @flash-sprite.draw graphics, @x, @y
+
+  update: (elapsed-time) ->
+    @flash-period =
+      if @timer.current-time < kFlickerTime
+        kFlashInterp * @timer.current-time + kStartPeriod
+      else
+        kFlickerPeriod
+
+    return @timer.active!
+
+
+export class HeartPickup extends FlashingPickup
+
+  kRectangle   = new Rectangle 5, 8, 21, 19
+
+  kSourceX     = 2
+  kSourceY     = 5
+  kHealthValue = 2
+
+  (graphics, @center-x, @center-y) ->
+    super graphics, @center-x, @center-y,
+      kSourceX, kSourceY,
+      kRectangle, kHealthValue, HEALTH
 

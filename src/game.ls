@@ -28,7 +28,8 @@ Map = require \./map
 { ParticleTools }       = require \./particle-system
 { StarParticle }        = require \./star-particle
 { DeathCloudParticle }  = require \./death-cloud-particle
-{ PowerDorito, Pickup } = require \./pickup
+
+{ PowerDorito, HeartPickup, Pickup } = require \./pickup
 
 
 # Reference constants
@@ -142,10 +143,10 @@ update = (elapsed-time) ->
 
   # Bat died
   if bat and not bat?.update elapsed-time, player.x
-    pickups.add new PowerDorito graphics,
-      bat.center-x, bat.center-y, Pickup.SMALL
     DeathCloudParticle.create-random-death-clouds ptools,
       bat.center-x, bat.center-y, 3
+    pickups.add new PowerDorito graphics, bat.center-x, bat.center-y, Pickup.SMALL
+    pickups.add new HeartPickup graphics, bat.center-x, bat.center-y
     bat := null
 
   # Bullet-to-enemy collisions
