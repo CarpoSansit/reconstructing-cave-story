@@ -223,8 +223,6 @@ export class Player implements Damageable::, MapCollidable::
       @damage-text.set-damage damage
 
   collect-pickup: (pickup) ->
-    std.log 'SFX: Ding!'
-    std.log pickup, Pickup.EXPERIENCE
     if pickup.type is Pickup.EXPERIENCE
       @gun.collect-experience pickup.value
       @gun-hud.activate-flash!
