@@ -224,6 +224,10 @@ export class Player implements Damageable::, MapCollidable::
 
   collect-pickup: (pickup) ->
     std.log 'SFX: Ding!'
+    std.log pickup, Pickup.EXPERIENCE
+    if pickup.type is Pickup.EXPERIENCE
+      @gun.collect-experience pickup.value
+      @gun-hud.activate-flash!
 
   sprite-is-visible: ->
     duty = @invincible-timer.current-time `std.div` kInvincibleFlashTime % 2 is 0

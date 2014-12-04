@@ -5,7 +5,6 @@
 # All the different guns
 #
 
-
 require! \std
 require! \./units
 
@@ -33,41 +32,21 @@ kHorizontalOffset = 0
 kRightOffset      = 1
 kLeftOffset       = 0
 
-# Weapon tile offsets
-kPolarStarIndex = 2
-
-# Projectile sprite sources
-kProjectileSrcYs = [ 2, 2, 3 ]
-kProjectileSrcXs = [ 8, 10, 8 ]
-
-# Projectile nozzle offsets (game units)
-kNozzleHorizY      = 23
-kNozzleHorizLeftX  = 10
-kNozzleHorizRightX = 38
-
-kNozzleUpY      = 4
-kNozzleUpLeftX  = 27
-kNozzleUpRightX = 21
-
-kNozzleDownY      = 28
-kNozzleDownLeftX  = 29
-kNozzleDownRightX = 19
-
-# Projectile properties
-kLifespans        = [ tile-to-game(3.5), tile-to-game(5), tile-to-game(7) ]
-kSpeeds           = [ 0.6, 0.6, 0.6 ]
-kCollisionWidths  = [ 32, 32, 32 ]
-kCollisionHeights = [ 4, 8, 16 ]
-kDamages          = [ 1, 2, 4 ]
-
 # Firing direction modes
-
 [ UP, DOWN, LEFT, RIGHT ] = std.enum
 
 
 # Private Class: Projectile
 
 class PolarStarProjectile extends Projectile
+
+  # Projectile properties
+  kLifespans        = [ tile-to-game(3.5), tile-to-game(5), tile-to-game(7) ]
+  kSpeeds           = [ 0.6, 0.6, 0.6 ]
+  kCollisionWidths  = [ 32, 32, 32 ]
+  kCollisionHeights = [ 4, 8, 16 ]
+  kDamages          = [ 1, 2, 4 ]
+
   (@sprite, state, x, y, @gun-level) ->
     super kDamages[@gun-level - 1]
 
@@ -157,11 +136,34 @@ class PolarStarProjectile extends Projectile
 
 export class PolarStar
 
+  kExperiences = [ 0, 10, 30, 40 ]
+
+  # Weapon tile offsets
+  kPolarStarIndex = 2
+
+  # Projectile sprite sources
+  kProjectileSrcYs = [ 2, 2, 3 ]
+  kProjectileSrcXs = [ 8, 10, 8 ]
+
+  # Projectile nozzle offsets (game units)
+  kNozzleHorizY      = 23
+  kNozzleHorizLeftX  = 10
+  kNozzleHorizRightX = 38
+
+  kNozzleUpY      = 4
+  kNozzleUpLeftX  = 27
+  kNozzleUpRightX = 21
+
+  kNozzleDownY      = 28
+  kNozzleDownLeftX  = 29
+  kNozzleDownRightX = 19
+
+  # Consturctor
   (graphics) ->
     @projectile-a = null
     @projectile-b = null
     @sprites = @initialise-sprites graphics
-    @current-level = 1
+    @current-experience = 0
 
     @hp-sprites =
       for lvl from 0 to units.kMaxGunLevel
@@ -172,6 +174,16 @@ export class PolarStar
       for lvl from 0 to units.kMaxGunLevel
         new Sprite graphics, \bullet,
           tpx(kProjectileSrcXs[lvl]+1), tpx(kProjectileSrcYs[lvl]), tpx(1), tpx(1)
+
+  collect-experience: (experience) ->
+    @current-experience =
+      std.min kExperiences[units.kMaxGunLevel], @current-experience + experience
+
+  current-level: ->
+    for exp, level in kExperiences by -1
+      if @current-experience >= kExperiences[level - 1]
+        return level
+    return 1
 
   initialise-sprites: (graphics) ->
     SpriteState.generate-with (state) ->
@@ -210,17 +222,17 @@ export class PolarStar
     # Use next available projectile
     sprite =
       if state.HORIZONTAL
-        @hp-sprites[@current-level - 1]
+        @hp-sprites[@current-level! - 1]
       else
-        @vp-sprites[@current-level - 1]
+        @vp-sprites[@current-level! - 1]
 
     if not @projectile-a
       @projectile-a =
-        new PolarStarProjectile sprite, state, bullet-x, bullet-y, @current-level
+        new PolarStarProjectile sprite, state, bullet-x, bullet-y, @current-level!
 
     else if not @projectile-b
       @projectile-b =
-        new PolarStarProjectile sprite, state, bullet-x, bullet-y, @current-level
+        new PolarStarProjectile sprite, state, bullet-x, bullet-y, @current-level!
 
   stop-fire: ->
 
@@ -264,5 +276,8 @@ export class PolarStar
     @projectile-b?.draw graphics
 
   draw-hud: (graphics, hud) ->
-    hud.draw graphics, @current-level, 0, 10
+    level = @current-level!
+    hud.draw graphics, level,
+      @current-experience - kExperiences[level - 1],
+      kExperiences[level] - kExperiences[level - 1]
 

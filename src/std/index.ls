@@ -7,7 +7,7 @@
 
 # Get the functions we want out of Prelude
 
-{ id, map, filter, reject, any, div } = require \prelude-ls
+{ id, map, filter, reject, any, div, reverse } = require \prelude-ls
 
 
 # Custom helpers
@@ -48,7 +48,7 @@ export class InterfaceError extends Error
 
 export {
   # Specified Prelude functions only
-  id, any, map, filter, reject, div,
+  id, any, map, filter, reject, div, reverse
 
   # Enum helper - assign sequential integers using destructuring syntax
   enum: [ 0 to 20 ]

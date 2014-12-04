@@ -105,7 +105,7 @@ export class PowerDorito extends Pickup implements MapCollidable::
   on-delta: (side) ->
 
 
-# Export public constants
+# Export public constants in Pickup namespace
 
-# export HEALTH, MISSLES, EXPERIENCE
+Pickup <<< { HEALTH, MISSILES, EXPERIENCE }
 

@@ -18,16 +18,17 @@ Map = require \./map
 
 { tile-to-game } = units
 
-{ Timer }              = require \./timer
-{ Player }             = require \./player
-{ Pickups }            = require \./pickups
-{ Rectangle }          = require \./rectangle
-{ FirstCaveBat }       = require \./first-cave-bat
-{ FixedBackdrop }      = require \./backdrop
-{ DamageTexts }        = require \./damage-texts
-{ ParticleTools }      = require \./particle-system
-{ StarParticle }       = require \./star-particle
-{ DeathCloudParticle } = require \./death-cloud-particle
+{ Timer }               = require \./timer
+{ Player }              = require \./player
+{ Pickups }             = require \./pickups
+{ Rectangle }           = require \./rectangle
+{ FirstCaveBat }        = require \./first-cave-bat
+{ FixedBackdrop }       = require \./backdrop
+{ DamageTexts }         = require \./damage-texts
+{ ParticleTools }       = require \./particle-system
+{ StarParticle }        = require \./star-particle
+{ DeathCloudParticle }  = require \./death-cloud-particle
+{ PowerDorito, Pickup } = require \./pickup
 
 
 # Reference constants
@@ -141,6 +142,8 @@ update = (elapsed-time) ->
 
   # Bat died
   if bat and not bat?.update elapsed-time, player.x
+    pickups.add new PowerDorito graphics,
+      bat.center-x, bat.center-y, Pickup.SMALL
     DeathCloudParticle.create-random-death-clouds ptools,
       bat.center-x, bat.center-y, 3
     bat := null
@@ -185,11 +188,6 @@ create-test-world = ->
   player  := new Player graphics, units.tile-to-game(kScreenWidth/2), units.tile-to-game(10), ptools
   bat     := new FirstCaveBat graphics, units.tile-to-game(7), units.tile-to-game(8)
   pickups := new Pickups
-
-  { PowerDorito, Pickup } = require \./pickup
-
-  # MOCK
-  pickups.add new PowerDorito graphics, 300, 200, Pickup.SMALL
 
 
 # Game::start
